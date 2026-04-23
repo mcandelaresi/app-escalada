@@ -4,34 +4,34 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *classe Escalador s'encarrega de gestionar la informació dels usuaris
+ * Classe Escalador: gestiona la informació dels escaladors.
  */
 public class Escalador {
+
     private int idEscalador;
     private String nom;
-    private String alies;
+    private String alias;
     private int edat;
-    private String nivellMax;      // He de vigilar que estigui entre el 4 i el 9c+
-    private String estilPreferit;  // Aquí guardo si m'agrada més l'esportiva, clàssica o gel
-    private int idViaMax;          // Guardo la referència a la via on he fet el meu màxim nivell
+    private String nivellMax;
+    private String estilPreferit;
+    private int idViaMax;
 
-    // Com que l'enunciat diu que l'historial està pendent però el diagrama ja el preveu,
-    // m'he preparat aquesta llista per guardar totes les meves ascensions.
-    private List<Historial> historial;
+    private List<Registre> historial;
 
-    public Escalador(int idEscalador, String nom, String alies, int edat, String nivellMax, String estilPreferit, int idViaMax) {
+    public Escalador(int idEscalador, String nom, String alias, int edat,
+                     String nivellMax, String estilPreferit, int idViaMax) {
+
         this.idEscalador = idEscalador;
         this.nom = nom;
-        this.alies = alies;
+        this.alias = alias;
         this.edat = edat;
         this.nivellMax = nivellMax;
         this.estilPreferit = estilPreferit;
         this.idViaMax = idViaMax;
-        // Inicialitzo la meva llista d'ascensions buida per anar-la omplint més tard.
         this.historial = new ArrayList<>();
     }
 
-    // --- Getters i Setters ---
+    // Getters i setters
 
     public int getIdEscalador() { return idEscalador; }
     public void setIdEscalador(int idEscalador) { this.idEscalador = idEscalador; }
@@ -39,8 +39,8 @@ public class Escalador {
     public String getNom() { return nom; }
     public void setNom(String nom) { this.nom = nom; }
 
-    public String getAlies() { return alies; }
-    public void setAlies(String alies) { this.alies = alies; }
+    public String getAlias() { return alias; }
+    public void setAlias(String alias) { this.alias = alias; }
 
     public int getEdat() { return edat; }
     public void setEdat(int edat) { this.edat = edat; }
@@ -54,18 +54,19 @@ public class Escalador {
     public int getIdViaMax() { return idViaMax; }
     public void setIdViaMax(int idViaMax) { this.idViaMax = idViaMax; }
 
+    public List<Registre> getHistorial() { return historial; }
+
     /**
-     * Amb aquest mètode puc comprovar si un altre company té el mateix
-     * nivell que jo, complint així amb un dels requeriments del menú.
+     * Comprova si dos escaladors tenen el mateix nivell màxim.
      */
-    public boolean tincMateixNivell(Escalador unAltreEscalador) {
-        return this.nivellMax.equals(unAltreEscalador.getNivellMax());
+    public boolean tincMateixNivell(Escalador altre) {
+        return this.nivellMax.equals(altre.getNivellMax());
     }
 
     /**
-     * Afegeixo una nova ascensió al meu llistat personal de rutes completades.
+     * Afegeix una nova ascensió.
      */
-    public void afegirAscensio(Historial registre) {
+    public void afegirAscensio(Registre registre) {
         this.historial.add(registre);
     }
 }
