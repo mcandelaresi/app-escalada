@@ -1,28 +1,54 @@
 package model;
 
 /**
- * Classe abstracta Via: esquelet de qualsevol ruta d'escalada.
+ * Classe abstracta Via.
+ * Representa l'esquelet comú de qualsevol tipus de via d'escalada
+ * (esportiva, clàssica o gel).
  */
 public abstract class Via {
 
+    // Identificador únic de la via
     private int idVia;
+
+    // Nom de la via
     private String nom;
+
+    // Grau de dificultat (ex: 6a, 7b+...)
     private String grau;
+
+    // Orientació de la via (N, NE, S...)
     private String orientacio;
-    private String estat; // Apte, Construccio, Tancada
+
+    // Estat actual de la via (Apte, Construccio, Tancada)
+    private String estat;
+
+    // Data en què es va canviar l'estat de la via
     private String dataEstat;
 
-    private String tipus; // esportiva, classica, gel
+    // Tipus de via (esportiva, clàssica o gel)
+    private String tipus;
 
+    // Tipus d’ancoratges utilitzats a la via
     private String ancoratges;
+
+    // Tipus de roca (granit, calcària, etc.)
     private String tipusDeRoca;
 
+    // Escalador que ha creat la via (FK)
     private int idCreador;
+
+    // Sector on es troba la via (FK)
     private int idSector;
+
+    // Escola on es troba la via (FK)
     private int idEscola;
 
+    // Restriccions (ex: prohibicions temporals per fauna, clima, etc.)
     private String restriccions;
 
+    /**
+     * Constructor principal de la classe Via.
+     */
     public Via(int idVia, String nom, String grau, String orientacio,
                String estat, String dataEstat, String tipus,
                String ancoratges, String tipusDeRoca,
@@ -45,62 +71,116 @@ public abstract class Via {
     }
 
     /**
-     * Comprova si la via està disponible.
+     * Comprova si la via es pot escalar actualment.
+     * Només es pot escalar si l'estat és "Apte".
      */
     public boolean esPotEscalar() {
         return "apte".equalsIgnoreCase(this.estat);
     }
 
-    // getters i setters
-    // ID
-    public int getIdVia() { return idVia; }
-    public void setIdVia(int idVia) { this.idVia = idVia; }
+    // GETTERS I SETTERS
 
-    // Nom
-    public String getNom() { return nom; }
-    public void setNom(String nom) { this.nom = nom; }
+    public int getIdVia() {
+        return idVia;
+    }
 
-    // Grau
-    public String getGrau() { return grau; }
-    public void setGrau(String grau) { this.grau = grau; }
+    public void setIdVia(int idVia) {
+        this.idVia = idVia;
+    }
 
-    // Orientació
-    public String getOrientacio() { return orientacio; }
-    public void setOrientacio(String orientacio) { this.orientacio = orientacio; }
+    public String getNom() {
+        return nom;
+    }
 
-    // Estat
-    public String getEstat() { return estat; }
-    public void setEstat(String estat) { this.estat = estat; }
+    public void setNom(String nom) {
+        this.nom = nom;
+    }
 
-    // Data estat
-    public String getDataEstat() { return dataEstat; }
-    public void setDataEstat(String dataEstat) { this.dataEstat = dataEstat; }
+    public String getGrau() {
+        return grau;
+    }
 
-    // Tipus
-    public String getTipus() { return tipus; }
-    public void setTipus(String tipus) { this.tipus = tipus; }
+    public void setGrau(String grau) {
+        this.grau = grau;
+    }
 
-    // Ancoratges
-    public String getAncoratges() { return ancoratges; }
-    public void setAncoratges(String ancoratges) { this.ancoratges = ancoratges; }
+    public String getOrientacio() {
+        return orientacio;
+    }
 
-    // Tipus de roca
-    public String getTipusDeRoca() { return tipusDeRoca; }
-    public void setTipusDeRoca(String tipusDeRoca) { this.tipusDeRoca = tipusDeRoca; }
+    public void setOrientacio(String orientacio) {
+        this.orientacio = orientacio;
+    }
 
-    // Creador
-    public int getIdCreador() { return idCreador; }
-    public void setIdCreador(int idCreador) { this.idCreador = idCreador; }
+    public String getEstat() {
+        return estat;
+    }
 
-    // Sector
-    public int getIdSector() { return idSector; }
-    public void setIdSector(int idSector) { this.idSector = idSector; }
+    public void setEstat(String estat) {
+        this.estat = estat;
+    }
 
-    // Escola
-    public int getIdEscola() { return idEscola; }
-    public void setIdEscola(int idEscola) { this.idEscola = idEscola; }
+    public String getDataEstat() {
+        return dataEstat;
+    }
 
-    // Restriccions
-    public String getRestriccions() { return restriccions; }
-    public void setRestriccions(String restriccions) { this.restriccions = restriccions; }
+    public void setDataEstat(String dataEstat) {
+        this.dataEstat = dataEstat;
+    }
+
+    public String getTipus() {
+        return tipus;
+    }
+
+    public void setTipus(String tipus) {
+        this.tipus = tipus;
+    }
+
+    public String getAncoratges() {
+        return ancoratges;
+    }
+
+    public void setAncoratges(String ancoratges) {
+        this.ancoratges = ancoratges;
+    }
+
+    public String getTipusDeRoca() {
+        return tipusDeRoca;
+    }
+
+    public void setTipusDeRoca(String tipusDeRoca) {
+        this.tipusDeRoca = tipusDeRoca;
+    }
+
+    public int getIdCreador() {
+        return idCreador;
+    }
+
+    public void setIdCreador(int idCreador) {
+        this.idCreador = idCreador;
+    }
+
+    public int getIdSector() {
+        return idSector;
+    }
+
+    public void setIdSector(int idSector) {
+        this.idSector = idSector;
+    }
+
+    public int getIdEscola() {
+        return idEscola;
+    }
+
+    public void setIdEscola(int idEscola) {
+        this.idEscola = idEscola;
+    }
+
+    public String getRestriccions() {
+        return restriccions;
+    }
+
+    public void setRestriccions(String restriccions) {
+        this.restriccions = restriccions;
+    }
 }

@@ -9,11 +9,15 @@ public class ViaGel extends Via {
 
     public ViaGel(int idVia, String nom, String grau, String orientacio,
                   String estat, String dataEstat,
-                  int idEscola, int idSector, int idCreador,
+                  String tipus, String ancoratges, String tipusDeRoca,
+                  int idCreador, int idSector, int idEscola,
                   String restriccions) {
 
-        super(idVia, nom, grau, orientacio, estat, dataEstat,
-                "gel", idEscola, idSector, idCreador, restriccions);
+        super(idVia, nom, grau, orientacio,
+                estat, dataEstat,
+                tipus, ancoratges, tipusDeRoca,
+                idCreador, idSector, idEscola,
+                restriccions);
 
         this.trams = new ArrayList<>();
     }
@@ -21,7 +25,7 @@ public class ViaGel extends Via {
     public int getLlargadaTotal() {
         int total = 0;
         for (Tram t : trams) {
-            total += t.getLlargada();
+            total += t.getLlarg();
         }
         return total;
     }
