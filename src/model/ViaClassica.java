@@ -2,6 +2,7 @@ package model;
 
 import java.util.ArrayList;
 import java.util.List;
+import model.Tram;
 
 public class ViaClassica extends Via {
 
@@ -25,7 +26,7 @@ public class ViaClassica extends Via {
     public int getLlargadaTotal() {
         int total = 0;
         for (Tram t : trams) {
-            total += t.getLlargada();
+            total += t.getLlarg();
         }
         return total;
     }
