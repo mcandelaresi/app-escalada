@@ -37,14 +37,27 @@ public class Sector {
     }
 
     public void afegirVia(Via via) {
-        if (!vies.isEmpty()) {
-            String tipusActual = vies.get(0).getTipus();
-            if (!tipusActual.equals(via.getTipus())) {
-                throw new IllegalArgumentException("No es poden barrejar tipus de via al sector");
+
+        if (via == null) return;
+
+        for (Via v : vies) {
+
+            // Si ya hi ha vía GEL, no es permet altre cosa
+            if (v.getTipus().equalsIgnoreCase("GEL")
+                    && !via.getTipus().equalsIgnoreCase("GEL")) {
+                throw new IllegalArgumentException(
+                        "No es poden barrejar vies de GEL amb altres tipus");
+            }
+
+            // Si intentas ficar GEL en sector mixt
+            if (!v.getTipus().equalsIgnoreCase("GEL")
+                    && via.getTipus().equalsIgnoreCase("GEL")) {
+                throw new IllegalArgumentException(
+                        "No es poden barrejar vies de GEL amb altres tipus");
             }
         }
 
-        this.vies.add(via);
+        vies.add(via);
     }
 
     // Getters i setters
