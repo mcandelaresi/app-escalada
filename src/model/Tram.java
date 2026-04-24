@@ -1,25 +1,20 @@
 package model;
 
-public abstract class Tram {
-    protected int idTram;
-    protected int llarg;
-    protected String grauDificultat;
+public class Tram {
 
-    public Tram(int idTram, int llarg, String grauDificultat) {
+    private int idTram;
+    private int llarg;
+    private String grauDificultat;
+    private int idVia;
+
+    public Tram(int idTram, int llarg, String grauDificultat, int idVia) {
         this.idTram = idTram;
         this.llarg = llarg;
         this.grauDificultat = grauDificultat;
-    }
-
-    public int getIdTram() {
-        return idTram;
+        this.idVia = idVia;
     }
 
     public int getLlarg() {
         return llarg;
-    }
-
-    public String getGrauDificultat() {
-        return grauDificultat;
     }
 }
