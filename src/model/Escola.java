@@ -13,7 +13,6 @@ public class Escola {
     private String aproximacio;
     private String popularitat;
     private String restriccions;
-
     private List<Sector> sectors;
 
     public Escola(int idEscola, String nom, String aproximacio,
