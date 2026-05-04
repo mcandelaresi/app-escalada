@@ -63,7 +63,7 @@ public class Menu {
         System.out.print("Restriccions: "); String rest = sc.nextLine();
         Escola e = new Escola(0, nom, aprox, pop, rest);
         escolaDAO.insert(e);
-        System.out.println("✓ Escola creada!");
+        System.out.println("Escola creada!");
     }
     private void llistarEscoles() {
         List<Escola> llista = escolaDAO.findAll();
@@ -79,12 +79,12 @@ public class Menu {
         System.out.print("Nom (" + e.getNom() + "): "); String nom = sc.nextLine();
         if (!nom.isEmpty()) e.setNom(nom);
         escolaDAO.update(e);
-        System.out.println("✓ Modificada!");
+        System.out.println(" Modificada!");
     }
     private void eliminarEscola() {
         System.out.print("ID: "); int id = sc.nextInt(); sc.nextLine();
         escolaDAO.delete(id);
-        System.out.println("✓ Eliminada!");
+        System.out.println(" Eliminada!");
     }
     private void menuSectors() {
         System.out.println("\n--- SECTORS ---");
@@ -110,7 +110,7 @@ public class Menu {
         System.out.print("ID escola: "); int idEscola = sc.nextInt();
         Sector s = new Sector(0, nom, lat, lon, aprox, pop, rest, idEscola);
         sectorDAO.insert(s);
-        System.out.println("✓ Sector creat!");
+        System.out.println(" Sector creat!");
     }
     private void llistarSectors() {
         List<Sector> llista = sectorDAO.findAll();
@@ -126,12 +126,12 @@ public class Menu {
         System.out.print("Nom (" + s.getNom() + "): "); String nom = sc.nextLine();
         if (!nom.isEmpty()) s.setNom(nom);
         sectorDAO.update(s);
-        System.out.println("✓ Modificat!");
+        System.out.println(" Modificat!");
     }
     private void eliminarSector() {
         System.out.print("ID: "); int id = sc.nextInt(); sc.nextLine();
         sectorDAO.delete(id);
-        System.out.println("✓ Eliminat!");
+        System.out.println("Eliminat!");
     }
     private void menuVies() {
         System.out.println("\n--- VIES ---");
@@ -139,10 +139,10 @@ public class Menu {
         System.out.print("Opció: ");
         int op = sc.nextInt();
         switch (op) {
-            case 1: System.out.println("[TODO] Crear"); break;
-            case 2: System.out.println("[TODO] Llistar"); break;
-            case 3: System.out.println("[TODO] Modificar"); break;
-            case 4: System.out.println("[TODO] Eliminar"); break;
+            case 1: System.out.println(" Crear"); break;
+            case 2: System.out.println(" Llistar"); break;
+            case 3: System.out.println(" Modificar"); break;
+            case 4: System.out.println(" Eliminar"); break;
         }
     }
     private void menuEscaladors() {
@@ -167,7 +167,7 @@ public class Menu {
         System.out.print("Estil: "); String estil = sc.nextLine();
         Escalador e = new Escalador(0, nom, alias, edat, nivell, estil, 0);
         escaladorDAO.insert(e);
-        System.out.println("✓ Escalador creat!");
+        System.out.println(" Escalador creat!");
     }
     private void llistarEscaladors() {
         List<Escalador> llista = escaladorDAO.findAll();
@@ -183,12 +183,12 @@ public class Menu {
         System.out.print("Nom (" + e.getNom() + "): "); String nom = sc.nextLine();
         if (!nom.isEmpty()) e.setNom(nom);
         escaladorDAO.update(e);
-        System.out.println("✓ Modificat!");
+        System.out.println("Modificat!");
     }
     private void eliminarEscalador() {
         System.out.print("ID: "); int id = sc.nextInt(); sc.nextLine();
         escaladorDAO.delete(id);
-        System.out.println("✓ Eliminat!");
+        System.out.println("Eliminat!");
     }
     private void menuBusquedas() {
         System.out.println("\n--- BÚSQUEDAS ---");
@@ -198,6 +198,6 @@ public class Menu {
         System.out.print("Opció: ");
         int op = sc.nextInt();
         sc.nextLine();
-        System.out.println("[TODO] Búsqueda " + op);
+        System.out.println(" Búsqueda " + op);
     }
 }

@@ -9,7 +9,7 @@ import java.util.List;
 
 /**
  * DAO SQLite de la classe Poblacio.
- * Jo gestiono totes les operacions CRUD de la taula poblacions.
+ *  gestiona totes les operacions CRUD de la taula poblacions.
  */
 public class PoblacioDAO implements dao<Poblacio, Integer> {
 
