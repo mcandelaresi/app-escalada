@@ -26,9 +26,10 @@ public class SectorDAO implements dao<Sector, Integer> {
             stmt.setString(2, s.getNom());
             stmt.setDouble(3, s.getLatitud());
             stmt.setDouble(4, s.getLongitud());
-            stmt.setString(5, s.getPopularitat());
-            stmt.setString(6, s.getRestriccions());
-            stmt.setInt(7, s.getIdEscola());
+            stmt.setString(5, s.getAproximacio());
+            stmt.setString(6, s.getPopularitat());
+            stmt.setString(7, s.getRestriccions());
+            stmt.setInt(8, s.getIdEscola());
 
             stmt.executeUpdate();
 
@@ -106,10 +107,11 @@ public class SectorDAO implements dao<Sector, Integer> {
             stmt.setString(1, s.getNom());
             stmt.setDouble(2, s.getLatitud());
             stmt.setDouble(3, s.getLongitud());
-            stmt.setString(4, s.getPopularitat());
-            stmt.setString(5, s.getRestriccions());
-            stmt.setInt(6, s.getIdEscola());
-            stmt.setInt(7, s.getIdSector());
+            stmt.setString(4, s.getAproximacio());
+            stmt.setString(5, s.getPopularitat());
+            stmt.setString(6, s.getRestriccions());
+            stmt.setInt(7, s.getIdEscola());
+            stmt.setInt(8, s.getIdSector());
 
             stmt.executeUpdate();
 

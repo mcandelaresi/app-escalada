@@ -8,13 +8,43 @@ public class Tram {
     private int idVia;
 
     public Tram(int idTram, int llarg, String grauDificultat, int idVia) {
+        if (llarg < 15 || llarg > 30) {
+            throw new IllegalArgumentException("La llargada del tram ha d'estar entre 15 i 30 metres");
+        }
         this.idTram = idTram;
         this.llarg = llarg;
         this.grauDificultat = grauDificultat;
         this.idVia = idVia;
     }
 
+    public int getIdTram() {
+        return idTram;
+    }
+
     public int getLlarg() {
         return llarg;
+    }
+
+    public void setLlarg(int llarg) {
+        if (llarg < 15 || llarg > 30) {
+            throw new IllegalArgumentException("La llargada del tram ha d'estar entre 15 i 30 metres");
+        }
+        this.llarg = llarg;
+    }
+
+    public String getGrauDificultat() {
+        return grauDificultat;
+    }
+
+    public void setGrauDificultat(String grauDificultat) {
+        this.grauDificultat = grauDificultat;
+    }
+
+    public int getIdVia() {
+        return idVia;
+    }
+
+    public void setIdVia(int idVia) {
+        this.idVia = idVia;
     }
 }

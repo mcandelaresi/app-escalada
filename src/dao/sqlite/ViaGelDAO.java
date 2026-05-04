@@ -9,7 +9,7 @@ import java.util.List;
 
 /**
  * Jo gestiono la persistència de ViaGel.
- * IMPORTANT: només persisteixo la relació amb Via.
+ *
  */
 public class ViaGelDAO implements dao<ViaGel, Integer> {
 
