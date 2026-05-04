@@ -18,6 +18,11 @@ public class ViaClassicaDAO implements dao<ViaClassica, Integer> {
 
         String sql = "INSERT INTO vies_classica (ancoratges_permesos, id_via) VALUES (?, ?)";
 
+        if (connection == null) {
+            System.err.println("No hi ha connexió per inserir una via clàssica.");
+            return;
+        }
+
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
             stmt.setString(1, v.getAncoratgesPermesos());
@@ -26,7 +31,7 @@ public class ViaClassicaDAO implements dao<ViaClassica, Integer> {
             stmt.executeUpdate();
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error inserint via clàssica: " + e.getMessage());
         }
     }
 
@@ -35,24 +40,28 @@ public class ViaClassicaDAO implements dao<ViaClassica, Integer> {
 
         String sql = "SELECT * FROM vies_classica WHERE id_via = ?";
 
+        if (connection == null) {
+            System.err.println("No hi ha connexió per cercar una via clàssica.");
+            return null;
+        }
+
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
-                ViaClassica v = new ViaClassica(
+                return new ViaClassica(
                         rs.getInt("id_via"),
                         "", "", "", "", "",
                         "", "",
                         "", 0, 0, 0,
                         "", rs.getString("ancoratges_permesos")
                 );
-                return v;
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error cercant via clàssica: " + e.getMessage());
         }
 
         return null;
@@ -64,6 +73,11 @@ public class ViaClassicaDAO implements dao<ViaClassica, Integer> {
         java.util.List<ViaClassica> lista = new java.util.ArrayList<>();
 
         String sql = "SELECT * FROM vies_classica";
+
+        if (connection == null) {
+            System.err.println("No hi ha connexió per llistar les vies clàssiques.");
+            return lista;
+        }
 
         try (Statement st = connection.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
@@ -80,7 +94,7 @@ public class ViaClassicaDAO implements dao<ViaClassica, Integer> {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error llistant vies clàssiques: " + e.getMessage());
         }
 
         return lista;
@@ -91,6 +105,11 @@ public class ViaClassicaDAO implements dao<ViaClassica, Integer> {
 
         String sql = "UPDATE vies_classica SET ancoratges_permesos=? WHERE id_via=?";
 
+        if (connection == null) {
+            System.err.println("No hi ha connexió per actualitzar una via clàssica.");
+            return;
+        }
+
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
             stmt.setString(1, v.getAncoratgesPermesos());
@@ -99,7 +118,7 @@ public class ViaClassicaDAO implements dao<ViaClassica, Integer> {
             stmt.executeUpdate();
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error actualitzant via clàssica: " + e.getMessage());
         }
     }
 
@@ -108,13 +127,18 @@ public class ViaClassicaDAO implements dao<ViaClassica, Integer> {
 
         String sql = "DELETE FROM vies_classica WHERE id_via=?";
 
+        if (connection == null) {
+            System.err.println("No hi ha connexió per eliminar una via clàssica.");
+            return;
+        }
+
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
             stmt.setInt(1, id);
             stmt.executeUpdate();
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error eliminant via clàssica: " + e.getMessage());
         }
     }
 }

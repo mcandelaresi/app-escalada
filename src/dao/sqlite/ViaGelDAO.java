@@ -28,6 +28,11 @@ public class ViaGelDAO implements dao<ViaGel, Integer> {
 
         String sql = "INSERT INTO vies_gel (id_via) VALUES (?)";
 
+        if (connection == null) {
+            System.err.println("No hi ha connexió per inserir una via de gel.");
+            return;
+        }
+
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
             stmt.setInt(1, v.getIdVia());
@@ -35,7 +40,7 @@ public class ViaGelDAO implements dao<ViaGel, Integer> {
             stmt.executeUpdate();
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error inserint via de gel: " + e.getMessage());
         }
     }
 
@@ -46,6 +51,11 @@ public class ViaGelDAO implements dao<ViaGel, Integer> {
     public ViaGel findById(Integer id) {
 
         String sql = "SELECT * FROM vies_gel WHERE id_via = ?";
+
+        if (connection == null) {
+            System.err.println("No hi ha connexió per cercar una via de gel.");
+            return null;
+        }
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
@@ -65,7 +75,7 @@ public class ViaGelDAO implements dao<ViaGel, Integer> {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error cercant via de gel: " + e.getMessage());
         }
 
         return null;
@@ -79,6 +89,11 @@ public class ViaGelDAO implements dao<ViaGel, Integer> {
 
         List<ViaGel> llista = new ArrayList<>();
         String sql = "SELECT * FROM vies_gel";
+
+        if (connection == null) {
+            System.err.println("No hi ha connexió per llistar les vies de gel.");
+            return llista;
+        }
 
         try (PreparedStatement stmt = connection.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
@@ -96,7 +111,7 @@ public class ViaGelDAO implements dao<ViaGel, Integer> {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error llistant vies de gel: " + e.getMessage());
         }
 
         return llista;
@@ -107,6 +122,11 @@ public class ViaGelDAO implements dao<ViaGel, Integer> {
 
         String sql = "UPDATE vies_gel SET id_via = ? WHERE id_via = ?";
 
+        if (connection == null) {
+            System.err.println("No hi ha connexió per actualitzar una via de gel.");
+            return;
+        }
+
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
             stmt.setInt(1, v.getIdVia());
@@ -115,7 +135,7 @@ public class ViaGelDAO implements dao<ViaGel, Integer> {
             stmt.executeUpdate();
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error actualitzant via de gel: " + e.getMessage());
         }
     }
 
@@ -127,13 +147,18 @@ public class ViaGelDAO implements dao<ViaGel, Integer> {
 
         String sql = "DELETE FROM vies_gel WHERE id_via = ?";
 
+        if (connection == null) {
+            System.err.println("No hi ha connexió per eliminar una via de gel.");
+            return;
+        }
+
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
             stmt.setInt(1, id);
             stmt.executeUpdate();
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error eliminant via de gel: " + e.getMessage());
         }
     }
 }

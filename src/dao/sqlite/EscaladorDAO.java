@@ -7,6 +7,8 @@ import model.Escalador;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * DAO de l'entitat Escalador.
@@ -14,6 +16,8 @@ import java.util.List;
  * relacionades amb la taula "escalador" de la base de dades.
  */
 public class EscaladorDAO implements dao<Escalador, Integer> {
+
+    private static final Logger LOGGER = Logger.getLogger(EscaladorDAO.class.getName());
 
     /**
      * Insereixo un nou escalador a la base de dades.
@@ -25,29 +29,35 @@ public class EscaladorDAO implements dao<Escalador, Integer> {
         String sql = "INSERT INTO escalador (nom, alias, edat, nivell_max, estil_preferit, id_via_max) VALUES (?, ?, ?, ?, ?, ?)";
 
         // Obro connexió i preparo la consulta
-        try (Connection conn = ConnectionDB.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = ConnectionDB.getConnection()) {
+            if (conn == null) {
+                LOGGER.severe("No s'ha pogut obtenir la connexió per inserir un escalador.");
+                return;
+            }
 
-            // Assigno els valors de l'objecte Escalador als paràmetres SQL
-            ps.setString(1, e.getNom());
-            ps.setString(2, e.getAlias());
-            ps.setInt(3, e.getEdat());
-            ps.setString(4, e.getNivellMax());
-            ps.setString(5, e.getEstilPreferit());
-            ps.setInt(6, e.getIdViaMax());
+            try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            // Executo la inserció
-            ps.executeUpdate();
+                // Assigno els valors de l'objecte Escalador als paràmetres SQL
+                ps.setString(1, e.getNom());
+                ps.setString(2, e.getAlias());
+                ps.setInt(3, e.getEdat());
+                ps.setString(4, e.getNivellMax());
+                ps.setString(5, e.getEstilPreferit());
+                ps.setInt(6, e.getIdViaMax());
 
-            // Recupero l'ID generat automàticament
-            ResultSet rs = ps.getGeneratedKeys();
-            if (rs.next()) {
-                e.setIdEscalador(rs.getInt(1));
+                // Executo la inserció
+                ps.executeUpdate();
+
+                // Recupero l'ID generat automàticament
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        e.setIdEscalador(rs.getInt(1));
+                    }
+                }
             }
 
         } catch (SQLException ex) {
-            // En cas d'error SQL, el mostro per consola
-            ex.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Error inserint l'escalador", ex);
         }
     }
 
@@ -59,22 +69,28 @@ public class EscaladorDAO implements dao<Escalador, Integer> {
 
         String sql = "SELECT * FROM escalador WHERE id_escalador=?";
 
-        try (Connection conn = ConnectionDB.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = ConnectionDB.getConnection()) {
+            if (conn == null) {
+                LOGGER.severe("No s'ha pogut obtenir la connexió per cercar un escalador per ID.");
+                return null;
+            }
 
-            // Assigno l'ID a la consulta
-            ps.setInt(1, id);
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            // Executo la consulta
-            ResultSet rs = ps.executeQuery();
+                // Assigno l'ID a la consulta
+                ps.setInt(1, id);
 
-            // Si trobo resultat, el transformo en objecte
-            if (rs.next()) {
-                return map(rs);
+                // Executo la consulta
+                ResultSet rs = ps.executeQuery();
+
+                // Si trobo resultat, el transformo en objecte
+                if (rs.next()) {
+                    return map(rs);
+                }
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Error cercant l'escalador per ID", e);
         }
 
         // Si no existeix, retorno null
@@ -90,18 +106,24 @@ public class EscaladorDAO implements dao<Escalador, Integer> {
         List<Escalador> llista = new ArrayList<>();
         String sql = "SELECT * FROM escalador";
 
-        try (Connection conn = ConnectionDB.getConnection();
-             Statement st = conn.createStatement();
-             ResultSet rs = st.executeQuery(sql)) {
+        try (Connection conn = ConnectionDB.getConnection()) {
+            if (conn == null) {
+                LOGGER.severe("No s'ha pogut obtenir la connexió per llistar els escaladors.");
+                return llista;
+            }
 
-            // Recorro totes les files del resultat
-            while (rs.next()) {
-                // Converteixo cada fila en un objecte Escalador
-                llista.add(map(rs));
+            try (Statement st = conn.createStatement();
+                 ResultSet rs = st.executeQuery(sql)) {
+
+                // Recorro totes les files del resultat
+                while (rs.next()) {
+                    // Converteixo cada fila en un objecte Escalador
+                    llista.add(map(rs));
+                }
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Error llistant els escaladors", e);
         }
 
         return llista;
@@ -115,23 +137,29 @@ public class EscaladorDAO implements dao<Escalador, Integer> {
 
         String sql = "UPDATE escalador SET nom=?, alias=?, edat=?, nivell_max=?, estil_preferit=?, id_via_max=? WHERE id_escalador=?";
 
-        try (Connection conn = ConnectionDB.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = ConnectionDB.getConnection()) {
+            if (conn == null) {
+                LOGGER.severe("No s'ha pogut obtenir la connexió per actualitzar un escalador.");
+                return;
+            }
 
-            // Assigno els nous valors
-            ps.setString(1, e.getNom());
-            ps.setString(2, e.getAlias());
-            ps.setInt(3, e.getEdat());
-            ps.setString(4, e.getNivellMax());
-            ps.setString(5, e.getEstilPreferit());
-            ps.setInt(6, e.getIdViaMax());
-            ps.setInt(7, e.getIdEscalador());
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            // Executo l'actualització
-            ps.executeUpdate();
+                // Assigno els nous valors
+                ps.setString(1, e.getNom());
+                ps.setString(2, e.getAlias());
+                ps.setInt(3, e.getEdat());
+                ps.setString(4, e.getNivellMax());
+                ps.setString(5, e.getEstilPreferit());
+                ps.setInt(6, e.getIdViaMax());
+                ps.setInt(7, e.getIdEscalador());
+
+                // Executo l'actualització
+                ps.executeUpdate();
+            }
 
         } catch (SQLException ex) {
-            ex.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Error actualitzant l'escalador", ex);
         }
     }
 
@@ -143,17 +171,23 @@ public class EscaladorDAO implements dao<Escalador, Integer> {
 
         String sql = "DELETE FROM escalador WHERE id_escalador=?";
 
-        try (Connection conn = ConnectionDB.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = ConnectionDB.getConnection()) {
+            if (conn == null) {
+                LOGGER.severe("No s'ha pogut obtenir la connexió per eliminar un escalador.");
+                return;
+            }
 
-            // Assigno l'ID a eliminar
-            ps.setInt(1, id);
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            // Executo l'eliminació
-            ps.executeUpdate();
+                // Assigno l'ID a eliminar
+                ps.setInt(1, id);
+
+                // Executo l'eliminació
+                ps.executeUpdate();
+            }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Error eliminant l'escalador", e);
         }
     }
 

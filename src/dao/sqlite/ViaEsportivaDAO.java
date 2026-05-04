@@ -27,6 +27,11 @@ public class ViaEsportivaDAO implements dao<ViaEsportiva, Integer> {
         String sql = "INSERT INTO vies_esportiva " +
                 "(id_via, llargada) VALUES (?, ?)";
 
+        if (connection == null) {
+            System.err.println("No hi ha connexió per inserir una via esportiva.");
+            return;
+        }
+
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
             stmt.setInt(1, v.getIdVia());
@@ -35,7 +40,7 @@ public class ViaEsportivaDAO implements dao<ViaEsportiva, Integer> {
             stmt.executeUpdate();
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error inserint via esportiva: " + e.getMessage());
         }
     }
 
@@ -46,6 +51,11 @@ public class ViaEsportivaDAO implements dao<ViaEsportiva, Integer> {
     public ViaEsportiva findById(Integer id) {
 
         String sql = "SELECT * FROM vies_esportiva WHERE id_via = ?";
+
+        if (connection == null) {
+            System.err.println("No hi ha connexió per cercar una via esportiva.");
+            return null;
+        }
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
@@ -73,7 +83,7 @@ public class ViaEsportivaDAO implements dao<ViaEsportiva, Integer> {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error cercant via esportiva: " + e.getMessage());
         }
 
         return null;
@@ -88,6 +98,11 @@ public class ViaEsportivaDAO implements dao<ViaEsportiva, Integer> {
         List<ViaEsportiva> llista = new ArrayList<>();
 
         String sql = "SELECT * FROM vies_esportiva";
+
+        if (connection == null) {
+            System.err.println("No hi ha connexió per llistar les vies esportives.");
+            return llista;
+        }
 
         try (PreparedStatement stmt = connection.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
@@ -113,7 +128,7 @@ public class ViaEsportivaDAO implements dao<ViaEsportiva, Integer> {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error llistant vies esportives: " + e.getMessage());
         }
 
         return llista;
@@ -127,6 +142,11 @@ public class ViaEsportivaDAO implements dao<ViaEsportiva, Integer> {
 
         String sql = "UPDATE vies_esportiva SET llargada = ? WHERE id_via = ?";
 
+        if (connection == null) {
+            System.err.println("No hi ha connexió per actualitzar una via esportiva.");
+            return;
+        }
+
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
             stmt.setInt(1, v.getLlargada());
@@ -135,7 +155,7 @@ public class ViaEsportivaDAO implements dao<ViaEsportiva, Integer> {
             stmt.executeUpdate();
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error actualitzant via esportiva: " + e.getMessage());
         }
     }
 
@@ -147,6 +167,11 @@ public class ViaEsportivaDAO implements dao<ViaEsportiva, Integer> {
 
         String sql = "DELETE FROM vies_esportiva WHERE id_via = ?";
 
+        if (connection == null) {
+            System.err.println("No hi ha connexió per eliminar una via esportiva.");
+            return;
+        }
+
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
             stmt.setInt(1, id);
@@ -154,7 +179,7 @@ public class ViaEsportivaDAO implements dao<ViaEsportiva, Integer> {
             stmt.executeUpdate();
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error eliminant via esportiva: " + e.getMessage());
         }
     }
 }

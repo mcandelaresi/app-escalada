@@ -15,6 +15,7 @@ public class PoblacioDAO implements dao<Poblacio, Integer> {
 
     private Connection connection;
 
+
     /**
      * Assigno la connexió des de fora.
      */
@@ -28,14 +29,24 @@ public class PoblacioDAO implements dao<Poblacio, Integer> {
     @Override
     public void insert(Poblacio poblacio) {
 
-        String sql = "INSERT INTO poblacions (id_poblacio, nom) VALUES (?, ?)";
+        String sql = "INSERT INTO poblacions (nom) VALUES (?)";
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        if (connection == null) {
+            System.err.println("No hi ha connexió per inserir una població.");
+            return;
+        }
 
-            stmt.setInt(1, poblacio.getIdPoblacio());
-            stmt.setString(2, poblacio.getNom());
+        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            stmt.setString(1, poblacio.getNom());
 
             stmt.executeUpdate();
+
+            try (ResultSet keys = stmt.getGeneratedKeys()) {
+                if (keys.next()) {
+                    poblacio.setIdPoblacio(keys.getInt(1));
+                }
+            }
 
         } catch (SQLException e) {
             System.err.println("Error inserint població: " + e.getMessage());
@@ -49,6 +60,11 @@ public class PoblacioDAO implements dao<Poblacio, Integer> {
     public Poblacio findById(Integer id) {
 
         String sql = "SELECT * FROM poblacions WHERE id_poblacio = ?";
+
+        if (connection == null) {
+            System.err.println("No hi ha connexió per cercar una població.");
+            return null;
+        }
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
@@ -78,6 +94,11 @@ public class PoblacioDAO implements dao<Poblacio, Integer> {
         List<Poblacio> llista = new ArrayList<>();
         String sql = "SELECT * FROM poblacions";
 
+        if (connection == null) {
+            System.err.println("No hi ha connexió per llistar les poblacions.");
+            return llista;
+        }
+
         try (PreparedStatement stmt = connection.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
 
@@ -103,6 +124,11 @@ public class PoblacioDAO implements dao<Poblacio, Integer> {
 
         String sql = "UPDATE poblacions SET nom=? WHERE id_poblacio=?";
 
+        if (connection == null) {
+            System.err.println("No hi ha connexió per actualitzar una població.");
+            return;
+        }
+
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
             stmt.setString(1, poblacio.getNom());
@@ -122,6 +148,11 @@ public class PoblacioDAO implements dao<Poblacio, Integer> {
     public void delete(Integer id) {
 
         String sql = "DELETE FROM poblacions WHERE id_poblacio=?";
+
+        if (connection == null) {
+            System.err.println("No hi ha connexió per eliminar una població.");
+            return;
+        }
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
