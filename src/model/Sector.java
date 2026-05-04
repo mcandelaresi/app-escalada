@@ -14,7 +14,7 @@ public class Sector {
     private String restriccions;
     private int idEscola;
 
-    private List<Via> vies;
+    private final List<Via> vies;
 
     public Sector(int idSector, String nom, double latitud, double longitud,
                   String aproximacio, String popularitat,
@@ -60,7 +60,7 @@ public class Sector {
         vies.add(via);
     }
 
-    // Getters i setters
+    // GETTERS I SETTERS
 
     public int getIdSector() { return idSector; }
     public void setIdSector(int idSector) { this.idSector = idSector; }
@@ -70,6 +70,9 @@ public class Sector {
 
     public double getLatitud() { return latitud; }
     public void setLatitud(double latitud) { this.latitud = latitud; }
+
+    public String getAproximacio() { return aproximacio; }
+    public void setAproximacio(String aproximacio) { this.aproximacio = aproximacio; }
 
     public double getLongitud() { return longitud; }
     public void setLongitud(double longitud) { this.longitud = longitud; }

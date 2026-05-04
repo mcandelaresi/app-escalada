@@ -16,7 +16,7 @@ public class Poblacio {
     private String nom;
 
     // Relació: una població pot tenir múltiples escoles
-    private List<Escola> escoles;
+    private final List<Escola> escoles;
 
     /**
      * Constructor principal.
