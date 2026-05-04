@@ -7,6 +7,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class RegistreDAO implements dao<Registre, Integer> {
 
     private Connection connection;
@@ -18,20 +19,30 @@ public class RegistreDAO implements dao<Registre, Integer> {
     @Override
     public void insert(Registre r) {
 
-        String sql = "INSERT INTO registres (id_registre, id_escalador, id_via, data_ascensio, estil) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO registres (id_escalador, id_via, data_ascensio, estil) VALUES (?, ?, ?, ?)";
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        if (connection == null) {
+            System.err.println("No hi ha connexió per inserir un registre.");
+            return;
+        }
 
-            stmt.setInt(1, r.getIdRegistre());
-            stmt.setInt(2, r.getIdEscalador());
-            stmt.setInt(3, r.getIdVia());
-            stmt.setString(4, r.getDataAscensio());
-            stmt.setString(5, r.getEstil());
+        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            stmt.setInt(1, r.getIdEscalador());
+            stmt.setInt(2, r.getIdVia());
+            stmt.setString(3, r.getDataAscensio());
+            stmt.setString(4, r.getEstil());
 
             stmt.executeUpdate();
 
+            try (ResultSet keys = stmt.getGeneratedKeys()) {
+                if (keys.next()) {
+                    r.setIdRegistre(keys.getInt(1));
+                }
+            }
+
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error inserint registre: " + e.getMessage());
         }
     }
 
@@ -39,6 +50,11 @@ public class RegistreDAO implements dao<Registre, Integer> {
     public Registre findById(Integer id) {
 
         String sql = "SELECT * FROM registres WHERE id_registre = ?";
+
+        if (connection == null) {
+            System.err.println("No hi ha connexió per cercar un registre.");
+            return null;
+        }
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
@@ -56,7 +72,7 @@ public class RegistreDAO implements dao<Registre, Integer> {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error cercant registre: " + e.getMessage());
         }
 
         return null;
@@ -68,6 +84,11 @@ public class RegistreDAO implements dao<Registre, Integer> {
         List<Registre> lista = new ArrayList<>();
 
         String sql = "SELECT * FROM registres";
+
+        if (connection == null) {
+            System.err.println("No hi ha connexió per llistar els registres.");
+            return lista;
+        }
 
         try (PreparedStatement stmt = connection.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
@@ -83,7 +104,7 @@ public class RegistreDAO implements dao<Registre, Integer> {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error llistant registres: " + e.getMessage());
         }
 
         return lista;
@@ -93,6 +114,11 @@ public class RegistreDAO implements dao<Registre, Integer> {
     public void update(Registre r) {
 
         String sql = "UPDATE registres SET id_escalador=?, id_via=?, data_ascensio=?, estil=? WHERE id_registre=?";
+
+        if (connection == null) {
+            System.err.println("No hi ha connexió per actualitzar un registre.");
+            return;
+        }
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
@@ -105,7 +131,7 @@ public class RegistreDAO implements dao<Registre, Integer> {
             stmt.executeUpdate();
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error actualitzant registre: " + e.getMessage());
         }
     }
 
@@ -114,13 +140,18 @@ public class RegistreDAO implements dao<Registre, Integer> {
 
         String sql = "DELETE FROM registres WHERE id_registre = ?";
 
+        if (connection == null) {
+            System.err.println("No hi ha connexió per eliminar un registre.");
+            return;
+        }
+
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
             stmt.setInt(1, id);
             stmt.executeUpdate();
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Error eliminant registre: " + e.getMessage());
         }
     }
 }
