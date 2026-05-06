@@ -214,6 +214,36 @@ public class ViaDAO implements dao<Via, Integer> {
             LOGGER.log(Level.SEVERE, "Error eliminant la via", e);
         }
     }
+    // Metode per cercar una via pel seu nom
+    public Via findByNom(String nom) {
+
+        String sql = "SELECT * FROM vies WHERE LOWER(nom) = LOWER(?)";
+
+        try (Connection conn = ConnectionDB.getConnection()) {
+            if (conn == null) {
+                LOGGER.severe("No s'ha pogut obtenir la connexió per cercar una via per nom.");
+                return null;
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+                ps.setString(1, nom);
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return mapResultSetToVia(rs);
+                    }
+                }
+            }
+
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error cercant la via per nom", e);
+        }
+
+        return null;
+    }
+
+
 
     /**
      * Mètode privat que transforma un ResultSet en un objecte Via.

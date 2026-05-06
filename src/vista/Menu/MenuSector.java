@@ -92,7 +92,7 @@ public class MenuSector {
         }
 
         for (Sector s : llista) {
-            System.out.println(s.getIdSector() + " - " + s.getNom() + " | escola=" + s.getIdEscola() + " | " + s.getPopularitat());
+            System.out.println(s.getIdSector() + " - " + s.getNom() + " | escola = " + s.getIdEscola() + " | " + s.getPopularitat());
         }
     }
 
