@@ -166,14 +166,23 @@ public class MenuCerca {
     }
 
     private void escolesAmbRestriccions() {
-        List<Escola> resultat = AuxCerca.escolesAmbRestriccionsActives(escolaDAO.findAll());
+        List<Escola> totes = escolaDAO.findAll();
+        List<Escola> resultat = new java.util.ArrayList<>();
+
+        for (Escola escola : totes) {
+            if (escola.getRestriccions() != null && !escola.getRestriccions().isBlank()) {
+                resultat.add(escola);
+            }
+        }
+
         if (resultat.isEmpty()) {
             System.out.println("Sense resultats");
             return;
         }
 
         for (Escola escola : resultat) {
-            System.out.println(escola.getIdEscola() + " - " + escola.getNom() + " | " + escola.getRestriccions());
+            System.out.println(escola.getIdEscola() + " - " + escola.getNom()
+                    + " | restriccions: " + escola.getRestriccions());
         }
     }
 
