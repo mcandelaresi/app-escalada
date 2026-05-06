@@ -2,7 +2,7 @@ package model;
 
 import java.util.ArrayList;
 import java.util.List;
-import model.Tram;
+
 
 public class ViaClassica extends Via {
 
@@ -45,5 +45,25 @@ public class ViaClassica extends Via {
 
     public void setAncoratgesPermesos(String ancoratgesPermesos) {
         this.ancoratgesPermesos = ancoratgesPermesos;
+    }
+
+    public void establirTrams(List<Tram> nousTrams) {
+        this.trams = new ArrayList<>();
+        if (nousTrams != null) {
+            this.trams.addAll(nousTrams);
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "ViaClassica{" +
+                "ancoratgesPermesos='" + ancoratgesPermesos + '\'' +
+                ", trams=" + trams.size() +
+                ", llargadaTotal=" + getLlargadaTotal() +
+                ", nom='" + getNom() + '\'' +
+                ", grau='" + getGrau() + '\'' +
+                ", orientacio='" + getOrientacio() + '\'' +
+                ", estat='" + getEstat() + '\'' +
+                '}';
     }
 }
