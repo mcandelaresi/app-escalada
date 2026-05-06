@@ -199,9 +199,9 @@ public class EscaladorDAO implements dao<Escalador, Integer> {
 
         String sql = "SELECT * FROM escalador WHERE LOWER(alias) = LOWER(?)";
 
-        Connection conn = null;
+
         try {
-            conn = ConnectionDB.getConnection();
+            Connection conn = ConnectionDB.getConnection();
             if (conn == null) {
                 System.err.println("No s'ha pogut obtenir la connexió.");
                 return null;
@@ -241,9 +241,9 @@ public class EscaladorDAO implements dao<Escalador, Integer> {
         List<Escalador> llista = new ArrayList<>();
         String sql = "SELECT * FROM escalador WHERE LOWER(nivell_max) = LOWER(?)";
 
-        Connection conn = null;
+
         try {
-            conn = ConnectionDB.getConnection();
+            Connection conn = ConnectionDB.getConnection();
             if (conn == null) {
                 System.err.println("No s'ha pogut obtenir la connexió.");
                 return llista;

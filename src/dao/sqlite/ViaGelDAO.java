@@ -20,7 +20,7 @@ public class ViaGelDAO implements dao<ViaGel, Integer> {
     }
 
     /**
-     * Inserto una via de gel.
+     * Insereixo una via de gel.
      * Només guardo id_via perquè la resta es calcula.
      */
     @Override
