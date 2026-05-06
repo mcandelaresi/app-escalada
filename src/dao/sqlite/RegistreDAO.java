@@ -154,4 +154,76 @@ public class RegistreDAO implements dao<Registre, Integer> {
             System.err.println("Error eliminant registre: " + e.getMessage());
         }
     }
+
+    /**
+     * Buscar tots els registres d'un escalador específic, ordenats per data d'ascensió de més recent a més antiga.
+     */
+    public List<Registre> findByEscalador(int idEscalador) {
+
+        List<Registre> llista = new ArrayList<>();
+        String sql = "SELECT * FROM registres WHERE id_escalador = ? ORDER BY data_ascensio DESC";
+
+        if (connection == null) {
+            System.err.println("No hi ha connexió per cercar registres per escalador.");
+            return llista;
+        }
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+
+            stmt.setInt(1, idEscalador);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    llista.add(new Registre(
+                            rs.getInt("id_registre"),
+                            rs.getInt("id_escalador"),
+                            rs.getInt("id_via"),
+                            rs.getString("data_ascensio"),
+                            rs.getString("estil")
+                    ));
+                }
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error cercant registres per escalador: " + e.getMessage());
+        }
+
+        return llista;
+    }
+
+    /**
+     * Busca tots els registres d'una via específica, ordenats per data d'ascensió de més recent a més antiga.
+     */
+    public List<Registre> findByVia(int idVia) {
+
+        List<Registre> llista = new ArrayList<>();
+        String sql = "SELECT * FROM registres WHERE id_via = ? ORDER BY data_ascensio DESC";
+
+        if (connection == null) {
+            System.err.println("No hi ha connexió per cercar registres per via.");
+            return llista;
+        }
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+
+            stmt.setInt(1, idVia);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    llista.add(new Registre(
+                            rs.getInt("id_registre"),
+                            rs.getInt("id_escalador"),
+                            rs.getInt("id_via"),
+                            rs.getString("data_ascensio"),
+                            rs.getString("estil")
+                    ));
+                }
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error cercant registres per via: " + e.getMessage());
+        }
+
+        return llista;
+    }
 }
