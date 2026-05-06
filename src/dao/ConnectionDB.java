@@ -18,7 +18,7 @@ public class ConnectionDB {
                 try (Statement stmt = connection.createStatement()) {
                     stmt.execute("PRAGMA foreign_keys = ON");
 
-                    // nomes inicialitzar una vegada
+                    // només inicialitzar una vegada
                     if (!inicialitzada) {
                         inicialitzarBaseDades(stmt);
                         insertarDatosEjemplo(stmt);
