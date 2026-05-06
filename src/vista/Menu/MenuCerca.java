@@ -83,9 +83,41 @@ public class MenuCerca {
                 case 6 -> escaladorsMateixNivell();
                 case 7 -> viesApteRecentment();
                 case 8 -> viesMesLlarguesEscola();
+                case 9 -> buscarEscaladorPerAlias();
+                case 10 -> buscarEscaladorsPerNivell();
             }
 
         } while (op != 0);
+    }
+
+    //Buscar escalador per alias
+    private void buscarEscaladorPerAlias() {
+        String alias = Validacions.llegirTextNoBuit(sc, "Alias: ");
+
+        Escalador e = escaladorDAO.findByAlias(alias);
+
+        if (e == null) {
+            System.out.println("No trobat");
+            return;
+        }
+
+        System.out.println(e);
+    }
+
+    //Buscar escaladors per nivell
+    private void buscarEscaladorsPerNivell() {
+        String nivell = Validacions.llegirTextNoBuit(sc, "Nivell: ");
+
+        List<Escalador> list = escaladorDAO.findByNivell(nivell);
+
+        if (list.isEmpty()) {
+            System.out.println("Sense resultats");
+            return;
+        }
+
+        for (Escalador e : list) {
+            System.out.println(e.getIdEscalador() + " - " + e.getNom() + " (" + e.getAlias() + ")");
+        }
     }
 
     private void viesDunaEscolaDisponibles() {
