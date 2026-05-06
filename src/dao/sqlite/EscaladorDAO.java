@@ -191,6 +191,90 @@ public class EscaladorDAO implements dao<Escalador, Integer> {
         }
     }
 
+
+    /**
+     * Busca un escalador por alias.
+     */
+    public Escalador findByAlias(String alias) {
+
+        String sql = "SELECT * FROM escalador WHERE LOWER(alias) = LOWER(?)";
+
+        Connection conn = null;
+        try {
+            conn = dao.ConnectionDB.getConnection();
+            if (conn == null) {
+                System.err.println("No s'ha pogut obtenir la connexió.");
+                return null;
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+                ps.setString(1, alias);
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return new Escalador(
+                                rs.getInt("id_escalador"),
+                                rs.getString("nom"),
+                                rs.getString("alias"),
+                                rs.getInt("edat"),
+                                rs.getString("nivell_max"),
+                                rs.getString("estil_preferit"),
+                                rs.getInt("id_via_max")
+                        );
+                    }
+                }
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error cercant escalador per alias: " + e.getMessage());
+        }
+
+        return null;
+    }
+
+    /**
+     * Busca escaladors per nivell màxim.
+     */
+    public List<Escalador> findByNivell(String nivell) {
+
+        List<Escalador> llista = new ArrayList<>();
+        String sql = "SELECT * FROM escalador WHERE LOWER(nivell_max) = LOWER(?)";
+
+        Connection conn = null;
+        try {
+            conn = dao.ConnectionDB.getConnection();
+            if (conn == null) {
+                System.err.println("No s'ha pogut obtenir la connexió.");
+                return llista;
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+                ps.setString(1, nivell);
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        llista.add(new Escalador(
+                                rs.getInt("id_escalador"),
+                                rs.getString("nom"),
+                                rs.getString("alias"),
+                                rs.getInt("edat"),
+                                rs.getString("nivell_max"),
+                                rs.getString("estil_preferit"),
+                                rs.getInt("id_via_max")
+                        ));
+                    }
+                }
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error cercant escaladors per nivell: " + e.getMessage());
+        }
+
+        return llista;
+    }
+
     /**
      * Transformo una fila del ResultSet en un objecte Escalador.
      */
