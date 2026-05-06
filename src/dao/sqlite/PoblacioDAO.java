@@ -9,7 +9,7 @@ import java.util.List;
 
 /**
  * DAO SQLite de la classe Poblacio.
- *  gestiona totes les operacions CRUD de la taula poblacions.
+ * Gestiona totes les operacions CRUD de la taula poblacions.
  */
 public class PoblacioDAO implements dao<Poblacio, Integer> {
 
@@ -162,5 +162,35 @@ public class PoblacioDAO implements dao<Poblacio, Integer> {
         } catch (SQLException e) {
             System.err.println("Error eliminant població: " + e.getMessage());
         }
+    }
+    // Buscar població per nom
+
+    public Poblacio findByNom(String nom) {
+
+        String sql = "SELECT * FROM poblacions WHERE LOWER(nom) = LOWER(?)";
+
+        if (connection == null) {
+            System.err.println("No hi ha connexió per cercar una população.");
+            return null;
+        }
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+
+            stmt.setString(1, nom);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new Poblacio(
+                            rs.getInt("id_poblacio"),
+                            rs.getString("nom")
+                    );
+                }
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error cercant poblacio per nom: " + e.getMessage());
+        }
+
+        return null;
     }
 }
