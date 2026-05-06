@@ -183,4 +183,23 @@ public abstract class Via {
     public void setRestriccions(String restriccions) {
         this.restriccions = restriccions;
     }
+
+    @Override
+    public String toString() {
+        return "Via{" +
+                "idVia=" + idVia +
+                ", nom='" + nom + '\'' +
+                ", grau='" + grau + '\'' +
+                ", orientacio='" + orientacio + '\'' +
+                ", estat='" + estat + '\'' +
+                ", dataEstat='" + dataEstat + '\'' +
+                ", tipus='" + tipus + '\'' +
+                ", ancoratges='" + ancoratges + '\'' +
+                ", tipusDeRoca='" + tipusDeRoca + '\'' +
+                ", idCreador=" + idCreador +
+                ", idSector=" + idSector +
+                ", idEscola=" + idEscola +
+                ", restriccions='" + restriccions + '\'' +
+                '}';
+    }
 }

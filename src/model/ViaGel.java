@@ -37,4 +37,23 @@ public class ViaGel extends Via {
     public void afegirTram(Tram tram) {
         this.trams.add(tram);
     }
+
+    public void establirTrams(List<Tram> nousTrams) {
+        this.trams = new ArrayList<>();
+        if (nousTrams != null) {
+            this.trams.addAll(nousTrams);
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "ViaGel{" +
+                "trams=" + trams.size() +
+                ", llargadaTotal=" + getLlargadaTotal() +
+                ", nom='" + getNom() + '\'' +
+                ", grau='" + getGrau() + '\'' +
+                ", orientacio='" + getOrientacio() + '\'' +
+                ", estat='" + getEstat() + '\'' +
+                '}';
+    }
 }
