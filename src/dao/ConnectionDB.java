@@ -9,14 +9,21 @@ public class ConnectionDB {
 
     private static final String URL = "jdbc:sqlite:bdd/escalada.db";
 
+    private static boolean inicialitzada = false;
+
     public static Connection getConnection() {
         try {
             Connection connection = DriverManager.getConnection(URL);
             if (connection != null) {
                 try (Statement stmt = connection.createStatement()) {
                     stmt.execute("PRAGMA foreign_keys = ON");
-                    inicialitzarBaseDades(stmt);
-                    insertarDatosEjemplo(stmt);
+
+                    // nomes inicialitzar una vegada
+                    if (!inicialitzada) {
+                        inicialitzarBaseDades(stmt);
+                        insertarDatosEjemplo(stmt);
+                        inicialitzada = true;
+                    }
                 }
             }
             return connection;
