@@ -201,7 +201,7 @@ public class EscaladorDAO implements dao<Escalador, Integer> {
 
         Connection conn = null;
         try {
-            conn = dao.ConnectionDB.getConnection();
+            conn = ConnectionDB.getConnection();
             if (conn == null) {
                 System.err.println("No s'ha pogut obtenir la connexió.");
                 return null;
@@ -243,7 +243,7 @@ public class EscaladorDAO implements dao<Escalador, Integer> {
 
         Connection conn = null;
         try {
-            conn = dao.ConnectionDB.getConnection();
+            conn = ConnectionDB.getConnection();
             if (conn == null) {
                 System.err.println("No s'ha pogut obtenir la connexió.");
                 return llista;
