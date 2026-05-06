@@ -243,7 +243,65 @@ public class ViaDAO implements dao<Via, Integer> {
         return null;
     }
 
+    //   Busca totes les vies d'un sector.
+    public List<Via> findBySector(int idSector) {
 
+        List<Via> llista = new ArrayList<>();
+        String sql = "SELECT * FROM vies WHERE id_sector = ?";
+
+        try (Connection conn = ConnectionDB.getConnection()) {
+            if (conn == null) {
+                LOGGER.severe("No s'ha pogut obtenir la connexió per cercar vies per sector.");
+                return llista;
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+                ps.setInt(1, idSector);
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        llista.add(mapResultSetToVia(rs));
+                    }
+                }
+            }
+
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error cercant vies per sector", e);
+        }
+
+        return llista;
+    }
+
+    // Busca totes les vies d'una escola.
+    public List<Via> findByEscola(int idEscola) {
+
+        List<Via> llista = new ArrayList<>();
+        String sql = "SELECT * FROM vies WHERE id_escola = ?";
+
+        try (Connection conn = ConnectionDB.getConnection()) {
+            if (conn == null) {
+                LOGGER.severe("No s'ha pogut obtenir la connexió per cercar vies per escola.");
+                return llista;
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+                ps.setInt(1, idEscola);
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        llista.add(mapResultSetToVia(rs));
+                    }
+                }
+            }
+
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error cercant vies per escola", e);
+        }
+
+        return llista;
+    }
 
     /**
      * Mètode privat que transforma un ResultSet en un objecte Via.
