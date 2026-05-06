@@ -38,27 +38,49 @@ public class Sector {
 
     public void afegirVia(Via via) {
 
-        if (via == null) return;
-
-        for (Via v : vies) {
-
-            // Si ya hi ha vía GEL, no es permet altre cosa
-            if (v.getTipus().equalsIgnoreCase("GEL")
-                    && !via.getTipus().equalsIgnoreCase("GEL")) {
-                throw new IllegalArgumentException(
-                        "No es poden barrejar vies de GEL amb altres tipus");
-            }
-
-            // Si intentas ficar GEL en sector mixt
-            if (!v.getTipus().equalsIgnoreCase("GEL")
-                    && via.getTipus().equalsIgnoreCase("GEL")) {
-                throw new IllegalArgumentException(
-                        "No es poden barrejar vies de GEL amb altres tipus");
-            }
-        }
-
-        vies.add(via);
+    if (via == null) {
+        return;
     }
+
+    if (!potAfegirVia(via)) {
+        throw new IllegalArgumentException(
+                "No es poden barrejar vies de GEL amb altres tipus");
+    }
+
+    vies.add(via);
+}
+    public boolean potAfegirVia(Via novaVia) {
+    if (novaVia == null) {
+        return false;
+    }
+
+    if (vies.isEmpty()) {
+        return true;
+    }
+
+    boolean sectorTeGel = false;
+    boolean sectorTeNoGel = false;
+
+    for (Via via : vies) {
+        if ("GEL".equalsIgnoreCase(via.getTipus())) {
+            sectorTeGel = true;
+        } else {
+            sectorTeNoGel = true;
+        }
+    }
+
+    boolean novaEsGel = "GEL".equalsIgnoreCase(novaVia.getTipus());
+
+    if (sectorTeGel && !novaEsGel) {
+        return false;
+    }
+
+    if (sectorTeNoGel && novaEsGel) {
+        return false;
+    }
+
+    return true;
+}
 
     // GETTERS I SETTERS
 
