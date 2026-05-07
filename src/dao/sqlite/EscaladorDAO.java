@@ -25,6 +25,13 @@ public class EscaladorDAO implements dao<Escalador, Integer> {
     @Override
     public void insert(Escalador e) {
 
+        //Validacio abans d'inserir
+        if (existsAlias(e.getAlias())) {
+            System.err.println("Error: ja existeix un escalador amb aquest alias.");
+            return;
+        }
+
+
         // Defineixo la consulta SQL amb placeholders
         String sql = "INSERT INTO escalador (nom, alias, edat, nivell_max, estil_preferit, id_via_max) VALUES (?, ?, ?, ?, ?, ?)";
 
@@ -235,6 +242,28 @@ public class EscaladorDAO implements dao<Escalador, Integer> {
         return lista;
     }
 
+    /**
+     * Comprueba si ya existe un alias en la base de datos.
+     */
+    public boolean existsAlias(String alias) {
+
+        String sql = "SELECT 1 FROM escalador WHERE alias = ?";
+
+        try (Connection conn = ConnectionDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, alias);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next(); // si hay fila → existe
+            }
+
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error comprobant alias duplicat", e);
+        }
+
+        return false;
+    }
 
     /**
      * Transformo una fila del ResultSet en un objecte Escalador.
