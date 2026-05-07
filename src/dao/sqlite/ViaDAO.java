@@ -243,6 +243,26 @@ public class ViaDAO implements dao<Via, Integer> {
         return null;
     }
 
+    //metode per cercar una via pel seu tipus
+    public List<Via> findByTipus(String tipus) {
+        List<Via> lista = new ArrayList<>();
+        String sql = "SELECT * FROM vies WHERE tipus=?";
+
+        try (Connection conn = ConnectionDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, tipus);
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                lista.add(mapResultSetToVia(rs));
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error cercant vies per tipus", e);
+        }
+
+        return lista;
+    }
+
     //   Busca totes les vies d'un sector.
     public List<Via> findBySector(int idSector) {
 

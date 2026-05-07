@@ -113,6 +113,30 @@ public class RegistreDAO implements dao<Registre, Integer> {
         return lista;
     }
 
+    public List<Registre> findByEscalador(Integer idEscalador) {
+        List<Registre> lista = new ArrayList<>();
+        String sql = "SELECT * FROM registres WHERE id_escalador=? ORDER BY data_ascensio DESC";
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, idEscalador);
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                lista.add(new Registre(
+                        rs.getInt("id_registre"),
+                        rs.getInt("id_escalador"),
+                        rs.getInt("id_via"),
+                        rs.getString("data_ascensio"),
+                        rs.getString("estil")
+                ));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error cercant registres per escalador: " + e.getMessage());
+        }
+
+        return lista;
+    }
+
     @Override
     public void update(Registre r) {
 
