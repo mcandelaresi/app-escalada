@@ -60,11 +60,12 @@ public class ConnectionDB {
         stmt.execute("CREATE TABLE IF NOT EXISTS escalador (" +
                 "id_escalador INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "nom TEXT NOT NULL, " +
-                "alias TEXT NOT NULL, " +
+                "alias TEXT NOT NULL UNIQUE, " +
                 "edat INTEGER, " +
                 "nivell_max TEXT, " +
                 "estil_preferit TEXT, " +
-                "id_via_max INTEGER)");
+                "id_via_max INTEGER, " +
+                "FOREIGN KEY (id_via_max) REFERENCES vies(id_via) ON DELETE SET NULL)");
 
         stmt.execute("CREATE TABLE IF NOT EXISTS vies (" +
                 "id_via INTEGER PRIMARY KEY AUTOINCREMENT, " +

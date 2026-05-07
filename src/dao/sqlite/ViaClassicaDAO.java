@@ -1,9 +1,12 @@
 package dao.sqlite;
 
 import dao.dao;
+import dao.ConnectionDB;
+import model.Tram;
 import model.ViaClassica;
 
 import java.sql.*;
+import java.util.List;
 
 public class ViaClassicaDAO implements dao<ViaClassica, Integer> {
 
@@ -29,6 +32,9 @@ public class ViaClassicaDAO implements dao<ViaClassica, Integer> {
             stmt.setInt(2, v.getIdVia());
 
             stmt.executeUpdate();
+            if (v.getLlargadaTotal() <= 50) {
+                throw new IllegalArgumentException("Llargada total ha de ser major a 50m");
+            }
 
         } catch (SQLException e) {
             System.err.println("Error inserint via clàssica: " + e.getMessage());
@@ -37,29 +43,39 @@ public class ViaClassicaDAO implements dao<ViaClassica, Integer> {
 
     @Override
     public ViaClassica findById(Integer id) {
+        String sql = "SELECT vc.*, v.* FROM vies_classica vc " +
+                "JOIN vies v ON vc.id_via = v.id_via WHERE vc.id_via = ?";
 
-        String sql = "SELECT * FROM vies_classica WHERE id_via = ?";
-
-        if (connection == null) {
-            System.err.println("No hi ha connexió per cercar una via clàssica.");
-            return null;
-        }
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-
-            stmt.setInt(1, id);
-            ResultSet rs = stmt.executeQuery();
+        try (Connection conn = ConnectionDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
-                return new ViaClassica(
+                ViaClassica vc = new ViaClassica(
                         rs.getInt("id_via"),
-                        "", "", "", "", "",
-                        "", "",
-                        "", 0, 0, 0,
-                        "", rs.getString("ancoratges_permesos")
+                        rs.getString("nom"),
+                        rs.getString("grau"),
+                        rs.getString("orientacio"),
+                        rs.getString("estat"),
+                        rs.getString("data_estat"),
+                        rs.getString("tipus"),
+                        rs.getString("ancoratges"),
+                        rs.getString("tipus_roca"),
+                        rs.getInt("id_creador"),
+                        rs.getInt("id_sector"),
+                        rs.getInt("id_escola"),
+                        rs.getString("restriccions"),
+                        rs.getString("ancoratges_permesos")
                 );
-            }
 
+                // CARGAR TRAMS
+                TramDAO tramDAO = new TramDAO();
+                List<Tram> trams = tramDAO.findByIdVia(id);
+                vc.establirTrams(trams);
+
+                return vc;
+            }
         } catch (SQLException e) {
             System.err.println("Error cercant via clàssica: " + e.getMessage());
         }

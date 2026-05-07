@@ -68,6 +68,43 @@ public final class AuxVia {
         }
         return false;
     }
+    public static boolean anclajeValida(String anchors, String tipo) {
+        if (anchors == null || tipo == null) return false;
+
+        String[] anclajesArray = anchors.split(",");
+
+        for (String ancla : anclajesArray) {
+            TipusAncoratge ta = TipusAncoratge.fromValor(ancla.trim());
+            if (ta == null) return false;
+
+            if ("Esportiva".equalsIgnoreCase(tipo)) {
+                if (!isEsportiva(ta)) return false;
+            } else if ("Classica".equalsIgnoreCase(tipo)) {
+                if (!isClassica(ta)) return false;
+            } else if ("Gel".equalsIgnoreCase(tipo)) {
+                if (!isGel(ta)) return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static boolean isEsportiva(TipusAncoratge ta) {
+        return ta == TipusAncoratge.SPITS || ta == TipusAncoratge.PARABOLTS || ta == TipusAncoratge.QUIMICS;
+    }
+
+    private static boolean isClassica(TipusAncoratge ta) {
+        return ta == TipusAncoratge.FRIENDS || ta == TipusAncoratge.TASCONS ||
+                ta == TipusAncoratge.BAGUES || ta == TipusAncoratge.PITONS ||
+                ta == TipusAncoratge.TRICAMS || ta == TipusAncoratge.BIGBROS ||
+                ta == TipusAncoratge.SPITS || ta == TipusAncoratge.PARABOLTS || ta == TipusAncoratge.QUIMICS;
+    }
+
+    private static boolean isGel(TipusAncoratge ta) {
+        return ta == TipusAncoratge.FRIENDS || ta == TipusAncoratge.TASCONS ||
+                ta == TipusAncoratge.BAGUES || ta == TipusAncoratge.PITONS ||
+                ta == TipusAncoratge.TRICAMS || ta == TipusAncoratge.BIGBROS;
+    }
 }
 
 
