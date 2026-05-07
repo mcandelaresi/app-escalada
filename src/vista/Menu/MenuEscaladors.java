@@ -164,6 +164,8 @@ public class MenuEscaladors {
         }
     }
 
+
+
     private int parseEnter(String valor, int perDefecte) {
         try {
             return Integer.parseInt(valor.trim());
