@@ -23,6 +23,10 @@ public class Tram {
         return idTram;
     }
 
+    public void setIdTram(int idTram) {
+        this.idTram = idTram;
+    }
+
     public int getNumLlarg() {
         return numLlarg;
     }
@@ -56,5 +60,16 @@ public class Tram {
 
     public void setIdVia(int idVia) {
         this.idVia = idVia;
+    }
+
+    @Override
+    public String toString() {
+        return "Tram{" +
+                "idTram=" + idTram +
+                ", numLlarg=" + numLlarg +
+                ", llargadaTram=" + llarg +
+                ", grauDificultat='" + grauDificultat + '\'' +
+                ", idVia=" + idVia +
+                '}';
     }
 }

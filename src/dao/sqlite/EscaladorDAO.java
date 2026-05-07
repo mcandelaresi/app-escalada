@@ -275,6 +275,7 @@ public class EscaladorDAO implements dao<Escalador, Integer> {
         return llista;
     }
 
+
     /**
      * Transformo una fila del ResultSet en un objecte Escalador.
      */

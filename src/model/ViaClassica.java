@@ -39,6 +39,8 @@ public class ViaClassica extends Via {
         this.trams.add(tram);
     }
 
+
+
     public String getAncoratgesPermesos() {
         return ancoratgesPermesos;
     }
