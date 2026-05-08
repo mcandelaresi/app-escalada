@@ -1,10 +1,7 @@
 package vista.Menu;
 
-import dao.sqlite.EscolaDAO;
-import dao.sqlite.SectorDAO;
+import controlador.SectorController;
 import excepcions.Validacions;
-import helpers.AuxSector;
-import model.Escola;
 import model.Sector;
 import model.enums.Popularitat;
 import vista.Vista;
@@ -15,26 +12,26 @@ import java.util.Scanner;
 public class MenuSector {
 
     private final Scanner sc;
-    private final SectorDAO sectorDAO;
-    private final EscolaDAO escolaDAO;
+    private final SectorController controller;
 
-    public MenuSector(Scanner sc, SectorDAO sectorDAO, EscolaDAO escolaDAO) {
+    public MenuSector(Scanner sc, SectorController controller) {
         this.sc = sc;
-        this.sectorDAO = sectorDAO;
-        this.escolaDAO = escolaDAO;
+        this.controller = controller;
     }
 
     public void menu() {
+
         int op;
 
         do {
             Vista.menuSectors();
+
             op = Validacions.llegirOpcio(sc, "Opció: ", 0, 5);
 
             switch (op) {
                 case 1 -> crear();
-                case 2 -> llistarUn();
-                case 3 -> llistarTots();
+                case 2 -> un();
+                case 3 -> tots();
                 case 4 -> modificar();
                 case 5 -> eliminar();
             }
@@ -43,32 +40,37 @@ public class MenuSector {
     }
 
     private void crear() {
+
         String nom = Validacions.llegirTextNoBuit(sc, "Nom: ");
         double lat = Validacions.llegirDouble(sc, "Latitud: ");
         double lon = Validacions.llegirDouble(sc, "Longitud: ");
         String aprox = Validacions.llegirTextNoBuit(sc, "Aproximació: ");
-        String pop = llegirPopularitat();
         String rest = Validacions.llegirTextNoBuit(sc, "Restriccions: ");
         int idEscola = Validacions.llegirEnterNoNegatiu(sc, "ID escola: ");
 
-        Escola escola = escolaDAO.findById(idEscola);
-        if (escola == null) {
-            System.out.println("L'escola no existeix.");
-            return;
-        }
-
-        if (sectorDAO.findByNomAndEscola(nom, idEscola) != null) {
-            System.out.println("Ja existeix un sector amb aquest nom dins d'aquesta escola.");
-            return;
+        String pop;
+        while (true) {
+            pop = Validacions.llegirTextNoBuit(sc, "Popularitat: ");
+            if (Popularitat.fromValor(pop) != null) break;
+            System.out.println("No vàlida");
         }
 
         Sector s = new Sector(0, nom, lat, lon, aprox, pop, rest, idEscola);
-        sectorDAO.insert(s);
-        System.out.println("Sector creat amb ID " + s.getIdSector());
+
+        if (!controller.crearSector(s)) {
+            System.out.println("Ja existeix un sector amb aquest nom a l’escola.");
+            return;
+        }
+
+        System.out.println("Sector creat");
     }
 
-    private void llistarUn() {
-        Sector s = sectorDAO.findById(Validacions.llegirEnterNoNegatiu(sc, "ID: "));
+    private void un() {
+
+        Sector s = controller.buscar(
+                Validacions.llegirEnterNoNegatiu(sc, "ID: ")
+        );
+
         if (s == null) {
             System.out.println("No trobat");
             return;
@@ -76,29 +78,35 @@ public class MenuSector {
 
         System.out.println("ID: " + s.getIdSector());
         System.out.println("Nom: " + s.getNom());
-        System.out.println("Coordenades: " + s.getLatitud() + ", " + s.getLongitud());
-        System.out.println("Aproximació: " + s.getAproximacio());
-        System.out.println("Popularitat: " + s.getPopularitat());
+        System.out.println("Lat: " + s.getLatitud());
+        System.out.println("Lon: " + s.getLongitud());
+        System.out.println("Aprox: " + s.getAproximacio());
+        System.out.println("Pop: " + s.getPopularitat());
         System.out.println("Restriccions: " + s.getRestriccions());
         System.out.println("Escola: " + s.getIdEscola());
-        System.out.println("Número de vies: " + s.getNumeroVies());
+        System.out.println("Vies: " + s.getNumeroVies());
     }
 
-    private void llistarTots() {
-        List<Sector> llista = sectorDAO.findAll();
-        if (llista.isEmpty()) {
+    private void tots() {
+
+        List<Sector> list = controller.tots();
+
+        if (list.isEmpty()) {
             System.out.println("No hi ha sectors");
             return;
         }
 
-        for (Sector s : llista) {
-            System.out.println(s.getIdSector() + " - " + s.getNom() + " | escola = " + s.getIdEscola() + " | " + s.getPopularitat());
-        }
+        list.forEach(s ->
+                System.out.println(s.getIdSector() + " - " + s.getNom() +
+                        " | escola=" + s.getIdEscola() +
+                        " | " + s.getPopularitat())
+        );
     }
 
     private void modificar() {
+
         int id = Validacions.llegirEnterNoNegatiu(sc, "ID: ");
-        Sector s = sectorDAO.findById(id);
+        Sector s = controller.buscar(id);
 
         if (s == null) {
             System.out.println("No trobat");
@@ -106,58 +114,44 @@ public class MenuSector {
         }
 
         String nom = Validacions.llegirTextOpcional(sc, "Nom (" + s.getNom() + "): ");
+        String lat = Validacions.llegirTextOpcional(sc, "Lat (" + s.getLatitud() + "): ");
+        String lon = Validacions.llegirTextOpcional(sc, "Lon (" + s.getLongitud() + "): ");
+        String aprox = Validacions.llegirTextOpcional(sc, "Aprox (" + s.getAproximacio() + "): ");
+        String pop = Validacions.llegirTextOpcional(sc, "Pop (" + s.getPopularitat() + "): ");
+        String rest = Validacions.llegirTextOpcional(sc, "Rest (" + s.getRestriccions() + "): ");
+
         if (!nom.isEmpty()) {
-            Sector existent = sectorDAO.findByNomAndEscola(nom, s.getIdEscola());
-            if (existent != null && existent.getIdSector() != s.getIdSector()) {
-                System.out.println("Ja existeix un sector amb aquest nom dins d'aquesta escola.");
+            if (!controller.modificar(s, nom)) {
+                System.out.println("Nom duplicat dins l’escola");
                 return;
             }
-            s.setNom(nom);
         }
 
-        String lat = Validacions.llegirTextOpcional(sc, "Latitud (" + s.getLatitud() + "): ");
         if (!lat.isEmpty()) s.setLatitud(parseDouble(lat, s.getLatitud()));
-
-        String lon = Validacions.llegirTextOpcional(sc, "Longitud (" + s.getLongitud() + "): ");
         if (!lon.isEmpty()) s.setLongitud(parseDouble(lon, s.getLongitud()));
-
-        String aprox = Validacions.llegirTextOpcional(sc, "Aproximació (" + s.getAproximacio() + "): ");
         if (!aprox.isEmpty()) s.setAproximacio(aprox);
-
-        String pop = Validacions.llegirTextOpcional(sc, "Popularitat (" + s.getPopularitat() + "): ");
-        if (!pop.isEmpty()) s.setPopularitat(normalitzarPopularitat(pop));
-
-        String rest = Validacions.llegirTextOpcional(sc, "Restriccions (" + s.getRestriccions() + "): ");
+        if (!pop.isEmpty()) s.setPopularitat(controller.normalitzarPopularitat(pop));
         if (!rest.isEmpty()) s.setRestriccions(rest);
 
-        sectorDAO.update(s);
-        System.out.println("Sector modificat");
+        controller.modificar(s, s.getNom());
+
+        System.out.println("Modificat");
     }
 
     private void eliminar() {
-        sectorDAO.delete(Validacions.llegirEnterNoNegatiu(sc, "ID: "));
-        System.out.println("Sector eliminat");
+
+        controller.eliminar(
+                Validacions.llegirEnterNoNegatiu(sc, "ID: ")
+        );
+
+        System.out.println("Eliminat");
     }
 
-    private double parseDouble(String valor, double perDefecte) {
+    private double parseDouble(String valor, double def) {
         try {
             return Double.parseDouble(valor.trim());
-        } catch (NumberFormatException e) {
-            return perDefecte;
+        } catch (Exception e) {
+            return def;
         }
-    }
-
-    private String llegirPopularitat() {
-        while (true) {
-            String pop = Validacions.llegirTextNoBuit(sc, "Popularitat (Baixa/Mitjana/Alta): ");
-            if (Popularitat.fromValor(pop) != null) {
-                return normalitzarPopularitat(pop);
-            }
-            System.out.println("Popularitat no vàlida.");
-        }
-    }
-
-    private String normalitzarPopularitat(String valor) {
-        return AuxSector.normalitzarPopularitat(valor);
     }
 }

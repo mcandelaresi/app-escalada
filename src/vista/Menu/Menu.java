@@ -1,103 +1,71 @@
-package vista.Menu;
+   package vista.Menu;
 
-import dao.ConnectionDB;
-import dao.sqlite.EscaladorDAO;
-import dao.sqlite.EscolaDAO;
-import dao.sqlite.PoblacioDAO;
-import dao.sqlite.RegistreDAO;
-import dao.sqlite.SectorDAO;
-import dao.sqlite.ViaClassicaDAO;
-import dao.sqlite.ViaDAO;
-import dao.sqlite.ViaEsportivaDAO;
-import dao.sqlite.ViaGelDAO;
-import excepcions.Validacions;
-import model.Via;
-import model.enums.EstatVia;
-import vista.Vista;
+   import controlador.*;
+   import dao.ConnectionDB;
+   import dao.sqlite.*;
+   import excepcions.Validacions;
+   import vista.Vista;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.sql.Connection;
-import java.util.Scanner;
+   import java.sql.Connection;
+   import java.util.Scanner;
 
-public class Menu {
+   public class Menu {
 
-    private final Scanner sc = new Scanner(System.in);
-    private final ViaDAO viaDAO;
+       Connection conn = ConnectionDB.getConnection();
+       private final Scanner sc = new Scanner(System.in);
 
-    private final MenuEscola menuEscola;
-    private final MenuSector menuSector;
-    private final MenuVies menuVia;
-    private final MenuEscaladors menuEscalador;
-    private final MenuCerca menuCerca;
+       private final MenuEscola menuEscola;
+       private final MenuSector menuSector;
+       private final MenuVies menuVia;
+       private final MenuEscaladors menuEscalador;
+       private final MenuCerca menuCerca;
 
-    public Menu() {
-        EscolaDAO escolaDAO = new EscolaDAO();
-        SectorDAO sectorDAO = new SectorDAO();
-        this.viaDAO = new ViaDAO();
-        ViaEsportivaDAO viaEsportivaDAO = new ViaEsportivaDAO();
-        ViaClassicaDAO viaClassicaDAO = new ViaClassicaDAO();
-        ViaGelDAO viaGelDAO = new ViaGelDAO();
-        EscaladorDAO escaladorDAO = new EscaladorDAO();
-        PoblacioDAO poblacioDAO = new PoblacioDAO();
-        RegistreDAO registreDAO = new RegistreDAO();
+       public Menu() {
+           // Instancia los DAOs (capa de acceso a datos)
+           ViaDAO viaDAO = new ViaDAO();
+           EscolaDAO escolaDAO = new EscolaDAO();
+           SectorDAO sectorDAO = new SectorDAO();
+           EscaladorDAO escaladorDAO = new EscaladorDAO();
+           ViaEsportivaDAO viaEsportivaDAO = new ViaEsportivaDAO();
+           ViaClassicaDAO viaClassicaDAO = new ViaClassicaDAO(conn);
+           ViaGelDAO viaGelDAO = new ViaGelDAO();
 
-        Connection conn = ConnectionDB.getConnection();
-        if (conn != null) {
-            escolaDAO.setConnection(conn);
-            sectorDAO.setConnection(conn);
-            poblacioDAO.setConnection(conn);
-            registreDAO.setConnection(conn);
-        }
+           // Instancia controladores
+           EscolaController escolaController = new EscolaController();  // Este no necesita DAO
+           SectorController sectorController = new SectorController(sectorDAO);
+           ViaController viaController = new ViaController(viaDAO, viaEsportivaDAO, viaClassicaDAO, viaGelDAO, escolaDAO, sectorDAO, escaladorDAO);
+           EscaladorController escaladorController = new EscaladorController(escaladorDAO, viaDAO);
+           CercaController cercaController = new CercaController(viaDAO, escolaDAO, sectorDAO, escaladorDAO, viaEsportivaDAO, viaClassicaDAO, viaGelDAO);
 
-        menuEscola = new MenuEscola(sc, escolaDAO);
-        menuSector = new MenuSector(sc, sectorDAO, escolaDAO);
-        menuVia = new MenuVies(sc, viaDAO, viaEsportivaDAO, viaClassicaDAO, viaGelDAO, escolaDAO, sectorDAO, escaladorDAO);
-        menuEscalador = new MenuEscaladors(sc, escaladorDAO, viaDAO);
-        menuCerca = new MenuCerca(sc, viaDAO);
-    }
+           // Instancia menús con controladores
+           menuEscola = new MenuEscola(sc, escolaController);
+           menuSector = new MenuSector(sc, sectorController);
+           menuVia = new MenuVies(sc, viaController);
+           menuEscalador = new MenuEscaladors(sc, escaladorController);
+           menuCerca = new MenuCerca(sc, cercaController);
+       }
 
-    public void menu() {
-        int op;
+       public void menu() {
+           int op;
 
-        Vista.intro();
+           Vista.intro();
 
-        do {
-            actualitzarEstatsCaducats();
-            Vista.menuPrincipal();
-            op = Validacions.llegirOpcio(sc, "Opció: ", 0, 5);
+           do {
+               menuVia.actualitzarEstatsCaducats();
 
-            switch (op) {
-                case 1 -> menuEscola.menu();
-                case 2 -> menuSector.menu();
-                case 3 -> menuVia.menu();
-                case 4 -> menuEscalador.menu();
-                case 5 -> menuCerca.menu();
-                case 0 -> System.out.println("Adeu!");
-            }
+               Vista.menuPrincipal();
 
-        } while (op != 0);
-    }
+               op = Validacions.llegirOpcio(sc, "Opció: ", 0, 5);
 
-    private void actualitzarEstatsCaducats() {
-        for (Via via : viaDAO.findAll()) {
-            if (via.getDataEstat() == null || via.getDataEstat().isBlank()) {
-                continue;
-            }
+               switch (op) {
+                   case 1 -> menuEscola.menu();
+                   case 2 -> menuSector.menu();
+                   case 3 -> menuVia.menu();
+                   case 4 -> menuEscalador.menu();
+                   case 5 -> menuCerca.menu();
+                   case 0 -> System.out.println("Adeu!");
+               }
 
-            if (!EstatVia.APTE.getValor().equalsIgnoreCase(via.getEstat())) {
-                try {
-                    LocalDate dataFi = LocalDate.parse(via.getDataEstat(), DateTimeFormatter.ISO_LOCAL_DATE);
-                    if (!dataFi.isAfter(LocalDate.now())) {
-                        via.setEstat(EstatVia.APTE.getValor());
-                        via.setDataEstat(LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE));
-                        viaDAO.update(via);
-                    }
-                } catch (DateTimeParseException ignored) {
-                    // si la data no és correcta, no faig res i continuo
-                }
-            }
-        }
-    }
-}
+           } while (op != 0);
+       }
+   }

@@ -1,18 +1,18 @@
 package dao.sqlite;
 
 import dao.dao;
-import dao.ConnectionDB;
 import model.Tram;
 import model.ViaClassica;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ViaClassicaDAO implements dao<ViaClassica, Integer> {
 
-    private Connection connection;
+    private final Connection connection;
 
-    public void setConnection(Connection connection) {
+    public ViaClassicaDAO(Connection connection) {
         this.connection = connection;
     }
 
@@ -21,17 +21,14 @@ public class ViaClassicaDAO implements dao<ViaClassica, Integer> {
 
         String sql = "INSERT INTO vies_classica (ancoratges_permesos, id_via) VALUES (?, ?)";
 
-        if (connection == null) {
-            System.err.println("No hi ha connexió per inserir una via clàssica.");
-            return;
-        }
-
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
             stmt.setString(1, v.getAncoratgesPermesos());
             stmt.setInt(2, v.getIdVia());
 
             stmt.executeUpdate();
+
+            // validació després d’insert
             if (v.getLlargadaTotal() <= 50) {
                 throw new IllegalArgumentException("Llargada total ha de ser major a 50m");
             }
@@ -43,39 +40,47 @@ public class ViaClassicaDAO implements dao<ViaClassica, Integer> {
 
     @Override
     public ViaClassica findById(Integer id) {
-        String sql = "SELECT vc.*, v.* FROM vies_classica vc " +
-                "JOIN vies v ON vc.id_via = v.id_via WHERE vc.id_via = ?";
 
-        try (Connection conn = ConnectionDB.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        String sql = """
+            SELECT vc.*, v.*
+            FROM vies_classica vc
+            JOIN vies v ON vc.id_via = v.id_via
+            WHERE vc.id_via = ?
+        """;
+
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+
             ps.setInt(1, id);
-            ResultSet rs = ps.executeQuery();
 
-            if (rs.next()) {
-                ViaClassica vc = new ViaClassica(
-                        rs.getInt("id_via"),
-                        rs.getString("nom"),
-                        rs.getString("grau"),
-                        rs.getString("orientacio"),
-                        rs.getString("estat"),
-                        rs.getString("data_estat"),
-                        rs.getString("tipus"),
-                        rs.getString("ancoratges"),
-                        rs.getString("tipus_roca"),
-                        rs.getInt("id_creador"),
-                        rs.getInt("id_sector"),
-                        rs.getInt("id_escola"),
-                        rs.getString("restriccions"),
-                        rs.getString("ancoratges_permesos")
-                );
+            try (ResultSet rs = ps.executeQuery()) {
 
-                // CARGAR TRAMS
-                TramDAO tramDAO = new TramDAO();
-                List<Tram> trams = tramDAO.findByIdVia(id);
-                vc.establirTrams(trams);
+                if (rs.next()) {
 
-                return vc;
+                    ViaClassica vc = new ViaClassica(
+                            rs.getInt("id_via"),
+                            rs.getString("nom"),
+                            rs.getString("grau"),
+                            rs.getString("orientacio"),
+                            rs.getString("estat"),
+                            rs.getString("data_estat"),
+                            rs.getString("tipus"),
+                            rs.getString("ancoratges"),
+                            rs.getString("tipus_roca"),
+                            rs.getInt("id_creador"),
+                            rs.getInt("id_sector"),
+                            rs.getInt("id_escola"),
+                            rs.getString("restriccions"),
+                            rs.getString("ancoratges_permesos")
+                    );
+
+                    TramDAO tramDAO = new TramDAO();
+                    List<Tram> trams = tramDAO.findByIdVia(id);
+                    vc.establirTrams(trams);
+
+                    return vc;
+                }
             }
+
         } catch (SQLException e) {
             System.err.println("Error cercant via clàssica: " + e.getMessage());
         }
@@ -84,16 +89,11 @@ public class ViaClassicaDAO implements dao<ViaClassica, Integer> {
     }
 
     @Override
-    public java.util.List<ViaClassica> findAll() {
+    public List<ViaClassica> findAll() {
 
-        java.util.List<ViaClassica> lista = new java.util.ArrayList<>();
+        List<ViaClassica> lista = new ArrayList<>();
 
         String sql = "SELECT * FROM vies_classica";
-
-        if (connection == null) {
-            System.err.println("No hi ha connexió per llistar les vies clàssiques.");
-            return lista;
-        }
 
         try (Statement st = connection.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
@@ -105,7 +105,8 @@ public class ViaClassicaDAO implements dao<ViaClassica, Integer> {
                         "", "", "", "", "",
                         "", "",
                         "", 0, 0, 0,
-                        "", rs.getString("ancoratges_permesos")
+                        "",
+                        rs.getString("ancoratges_permesos")
                 ));
             }
 
@@ -120,11 +121,6 @@ public class ViaClassicaDAO implements dao<ViaClassica, Integer> {
     public void update(ViaClassica v) {
 
         String sql = "UPDATE vies_classica SET ancoratges_permesos=? WHERE id_via=?";
-
-        if (connection == null) {
-            System.err.println("No hi ha connexió per actualitzar una via clàssica.");
-            return;
-        }
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
@@ -142,11 +138,6 @@ public class ViaClassicaDAO implements dao<ViaClassica, Integer> {
     public void delete(Integer id) {
 
         String sql = "DELETE FROM vies_classica WHERE id_via=?";
-
-        if (connection == null) {
-            System.err.println("No hi ha connexió per eliminar una via clàssica.");
-            return;
-        }
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 

@@ -3,17 +3,10 @@ package dao.sqlite;
 import dao.dao;
 import model.Escola;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * DAO SQLite de la classe Escola.
- * gestiono totes les operacions CRUD de la taula escoles.
- */
 public class EscolaDAO implements dao<Escola, Integer> {
 
     private Connection connection;
@@ -22,15 +15,12 @@ public class EscolaDAO implements dao<Escola, Integer> {
         this.connection = connection;
     }
 
-    /**
-     * Inserto una nova escola a la base de dades.
-     */
     @Override
     public void insert(Escola escola) {
 
         String sql = "INSERT INTO escoles (nom, aproximacio, popularitat, restriccions) VALUES (?, ?, ?, ?)";
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setString(1, escola.getNom());
             stmt.setString(2, escola.getAproximacio());
@@ -50,9 +40,6 @@ public class EscolaDAO implements dao<Escola, Integer> {
         }
     }
 
-    /**
-     * Busco una escola per ID.
-     */
     @Override
     public Escola findById(Integer id) {
 
@@ -61,16 +48,17 @@ public class EscolaDAO implements dao<Escola, Integer> {
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
             stmt.setInt(1, id);
-            ResultSet rs = stmt.executeQuery();
 
-            if (rs.next()) {
-                return new Escola(
-                        rs.getInt("id_escola"),
-                        rs.getString("nom"),
-                        rs.getString("aproximacio"),
-                        rs.getString("popularitat"),
-                        rs.getString("restriccions")
-                );
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new Escola(
+                            rs.getInt("id_escola"),
+                            rs.getString("nom"),
+                            rs.getString("aproximacio"),
+                            rs.getString("popularitat"),
+                            rs.getString("restriccions")
+                    );
+                }
             }
 
         } catch (SQLException e) {
@@ -80,9 +68,6 @@ public class EscolaDAO implements dao<Escola, Integer> {
         return null;
     }
 
-    /**
-     * Llisto totes les escoles.
-     */
     @Override
     public List<Escola> findAll() {
 
@@ -115,6 +100,7 @@ public class EscolaDAO implements dao<Escola, Integer> {
         String sql = "SELECT * FROM escoles WHERE LOWER(nom) = LOWER(?)";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+
             stmt.setString(1, nom);
 
             try (ResultSet rs = stmt.executeQuery()) {
@@ -128,16 +114,14 @@ public class EscolaDAO implements dao<Escola, Integer> {
                     );
                 }
             }
+
         } catch (SQLException e) {
-            System.err.println("Error cercant escola per nom: " + e.getMessage());
+            System.err.println("Error cercant escola: " + e.getMessage());
         }
 
         return null;
     }
 
-    /**
-     * Actualitzo una escola.
-     */
     @Override
     public void update(Escola escola) {
 
@@ -158,9 +142,6 @@ public class EscolaDAO implements dao<Escola, Integer> {
         }
     }
 
-    /**
-     * Elimino una escola.
-     */
     @Override
     public void delete(Integer id) {
 

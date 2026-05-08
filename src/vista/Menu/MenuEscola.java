@@ -1,8 +1,7 @@
 package vista.Menu;
 
-import dao.sqlite.EscolaDAO;
+import controlador.EscolaController;
 import excepcions.Validacions;
-import helpers.AuxEscola;
 import model.Escola;
 import model.enums.Popularitat;
 import vista.Vista;
@@ -13,24 +12,26 @@ import java.util.Scanner;
 public class MenuEscola {
 
     private final Scanner sc;
-    private final EscolaDAO escolaDAO;
+    private final EscolaController controller;
 
-    public MenuEscola(Scanner sc, EscolaDAO escolaDAO) {
+    public MenuEscola(Scanner sc, EscolaController controller) {
         this.sc = sc;
-        this.escolaDAO = escolaDAO;
+        this.controller = controller;
     }
 
     public void menu() {
+
         int op;
 
         do {
             Vista.menuEscoles();
+
             op = Validacions.llegirOpcio(sc, "Opció: ", 0, 5);
 
             switch (op) {
                 case 1 -> crear();
-                case 2 -> llistarUna();
-                case 3 -> llistarTotes();
+                case 2 -> una();
+                case 3 -> totes();
                 case 4 -> modificar();
                 case 5 -> eliminar();
             }
@@ -39,23 +40,34 @@ public class MenuEscola {
     }
 
     private void crear() {
+
         String nom = Validacions.llegirTextNoBuit(sc, "Nom: ");
-        if (escolaDAO.findByNom(nom) != null) {
+        String aprox = Validacions.llegirTextNoBuit(sc, "Aproximació: ");
+        String rest = Validacions.llegirTextNoBuit(sc, "Restriccions: ");
+
+        String pop;
+        while (true) {
+            pop = Validacions.llegirTextNoBuit(sc, "Popularitat: ");
+            if (Popularitat.fromValor(pop) != null) break;
+            System.out.println("No vàlida");
+        }
+
+        Escola e = new Escola(0, nom, aprox, pop, rest);
+
+        if (!controller.crearEscola(e)) {
             System.out.println("Ja existeix una escola amb aquest nom.");
             return;
         }
 
-        String aprox = Validacions.llegirTextNoBuit(sc, "Aproximació: ");
-        String pop = llegirPopularitat();
-        String rest = Validacions.llegirTextNoBuit(sc, "Restriccions: ");
-
-        Escola e = new Escola(0, nom, aprox, pop, rest);
-        escolaDAO.insert(e);
-        System.out.println("Escola creada amb ID " + e.getIdEscola());
+        System.out.println("Escola creada");
     }
 
-    private void llistarUna() {
-        Escola e = escolaDAO.findById(Validacions.llegirEnterNoNegatiu(sc, "ID: "));
+    private void una() {
+
+        Escola e = controller.buscarPerId(
+                Validacions.llegirEnterNoNegatiu(sc, "ID: ")
+        );
+
         if (e == null) {
             System.out.println("No trobada");
             return;
@@ -66,24 +78,27 @@ public class MenuEscola {
         System.out.println("Aproximació: " + e.getAproximacio());
         System.out.println("Popularitat: " + e.getPopularitat());
         System.out.println("Restriccions: " + e.getRestriccions());
-        System.out.println("Número de vies: " + e.getNumVies());
+        System.out.println("Vies: " + e.getNumVies());
     }
 
-    private void llistarTotes() {
-        List<Escola> llista = escolaDAO.findAll();
-        if (llista.isEmpty()) {
+    private void totes() {
+
+        List<Escola> list = controller.totes();
+
+        if (list.isEmpty()) {
             System.out.println("No hi ha escoles");
             return;
         }
 
-        for (Escola e : llista) {
-            System.out.println(e.getIdEscola() + " - " + e.getNom() + " | " + e.getPopularitat());
-        }
+        list.forEach(e ->
+                System.out.println(e.getIdEscola() + " - " + e.getNom() + " | " + e.getPopularitat())
+        );
     }
 
     private void modificar() {
+
         int id = Validacions.llegirEnterNoNegatiu(sc, "ID: ");
-        Escola e = escolaDAO.findById(id);
+        Escola e = controller.buscarPerId(id);
 
         if (e == null) {
             System.out.println("No trobada");
@@ -91,44 +106,29 @@ public class MenuEscola {
         }
 
         String nom = Validacions.llegirTextOpcional(sc, "Nom (" + e.getNom() + "): ");
-        if (!nom.isEmpty()) {
-            Escola existent = escolaDAO.findByNom(nom);
-            if (existent != null && existent.getIdEscola() != e.getIdEscola()) {
-                System.out.println("Ja existeix una escola amb aquest nom.");
-                return;
-            }
-            e.setNom(nom);
-        }
-
-        String aprox = Validacions.llegirTextOpcional(sc, "Aproximació (" + e.getAproximacio() + "): ");
-        if (!aprox.isEmpty()) e.setAproximacio(aprox);
-
-        String pop = Validacions.llegirTextOpcional(sc, "Popularitat (" + e.getPopularitat() + "): ");
-        if (!pop.isEmpty()) e.setPopularitat(normalitzarPopularitat(pop));
-
+        String aprox = Validacions.llegirTextOpcional(sc, "Aprox (" + e.getAproximacio() + "): ");
+        String pop = Validacions.llegirTextOpcional(sc, "Pop (" + e.getPopularitat() + "): ");
         String rest = Validacions.llegirTextOpcional(sc, "Restriccions (" + e.getRestriccions() + "): ");
+
+        if (!nom.isEmpty()) e.setNom(nom);
+        if (!aprox.isEmpty()) e.setAproximacio(aprox);
+        if (!pop.isEmpty()) e.setPopularitat(controller.normalitzarPopularitat(pop));
         if (!rest.isEmpty()) e.setRestriccions(rest);
 
-        escolaDAO.update(e);
-        System.out.println("Escola modificada");
+        if (!controller.modificar(e, nom)) {
+            System.out.println("Nom duplicat");
+            return;
+        }
+
+        System.out.println("Modificada");
     }
 
     private void eliminar() {
-        escolaDAO.delete(Validacions.llegirEnterNoNegatiu(sc, "ID: "));
-        System.out.println("Escola eliminada");
-    }
 
-    private String llegirPopularitat() {
-        while (true) {
-            String pop = Validacions.llegirTextNoBuit(sc, "Popularitat (Baixa/Mitjana/Alta): ");
-            if (Popularitat.fromValor(pop) != null) {
-                return normalitzarPopularitat(pop);
-            }
-            System.out.println("Popularitat no vàlida.");
-        }
-    }
+        controller.eliminar(
+                Validacions.llegirEnterNoNegatiu(sc, "ID: ")
+        );
 
-    private String normalitzarPopularitat(String valor) {
-        return AuxEscola.normalitzarPopularitat(valor);
+        System.out.println("Eliminada");
     }
 }
