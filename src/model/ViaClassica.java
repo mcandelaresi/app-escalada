@@ -31,6 +31,18 @@ public class ViaClassica extends Via {
         return total;
     }
 
+    //validar llargada total > 50
+    public boolean esValida() {
+        if (trams.isEmpty()) return false;
+        int total = getLlargadaTotal();
+        return total > 50;
+    }
+
+    //Contar trams
+    public int getNumTrams() {
+        return trams.size();
+    }
+
     public List<Tram> getTrams() {
         return trams;
     }

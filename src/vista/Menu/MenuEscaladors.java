@@ -1,9 +1,7 @@
 package vista.Menu;
 
-import dao.sqlite.EscaladorDAO;
-import dao.sqlite.ViaDAO;
+import controlador.EscaladorController;
 import excepcions.Validacions;
-import helpers.AuxEscalador;
 import model.Escalador;
 import model.enums.GrauDificultat;
 import vista.Vista;
@@ -14,13 +12,11 @@ import java.util.Scanner;
 public class MenuEscaladors {
 
     private final Scanner sc;
-    private final EscaladorDAO dao;
-    private final ViaDAO viaDAO;
+    private final EscaladorController controller;
 
-    public MenuEscaladors(Scanner sc, EscaladorDAO dao, ViaDAO viaDAO) {
+    public MenuEscaladors(Scanner sc, EscaladorController controller) {
         this.sc = sc;
-        this.dao = dao;
-        this.viaDAO = viaDAO;
+        this.controller = controller;
     }
 
     public void menu() {
@@ -55,13 +51,13 @@ public class MenuEscaladors {
                 llegirViaMax()
         );
 
-        dao.insert(e);
-        System.out.println(" Creat amb ID " + e.getIdEscalador());
+        controller.crear(e);
+        System.out.println("Creat amb ID " + e.getIdEscalador());
     }
 
     private void un() {
 
-        Escalador e = dao.findById(
+        Escalador e = controller.buscarPorId(
                 Validacions.llegirEnterNoNegatiu(sc, "ID: ")
         );
 
@@ -75,7 +71,7 @@ public class MenuEscaladors {
 
     private void tots() {
 
-        List<Escalador> list = dao.findAll();
+        List<Escalador> list = controller.buscarTodos();
 
         if (list.isEmpty()) {
             System.out.println("Sense escaladors");
@@ -89,7 +85,7 @@ public class MenuEscaladors {
 
     private void modificar() {
 
-        Escalador e = dao.findById(
+        Escalador e = controller.buscarPorId(
                 Validacions.llegirEnterNoNegatiu(sc, "ID: ")
         );
 
@@ -108,37 +104,39 @@ public class MenuEscaladors {
         if (!edat.isEmpty()) e.setEdat(parseEnter(edat, e.getEdat()));
 
         String nivell = Validacions.llegirTextOpcional(sc, "Nivell màxim: ");
-        if (!nivell.isEmpty()) e.setNivellMax(AuxEscalador.normalitzarGrau(nivell));
+        if (!nivell.isEmpty()) e.setNivellMax(controller.normalizarGrau(nivell));
 
         String estil = Validacions.llegirTextOpcional(sc, "Estil preferit: ");
-        if (!estil.isEmpty()) e.setEstilPreferit(AuxEscalador.normalitzarEstil(estil));
+        if (!estil.isEmpty()) e.setEstilPreferit(controller.normalizarEstil(estil));
 
         String viaMax = Validacions.llegirTextOpcional(sc, "ID via màxima: ");
         if (!viaMax.isEmpty()) {
             int idVia = parseEnter(viaMax, e.getIdViaMax());
-            if (idVia != 0 && viaDAO.findById(idVia) == null) {
+
+            if (idVia != 0 && !controller.existeVia(idVia)) {
                 System.out.println("La via no existeix.");
                 return;
             }
+
             e.setIdViaMax(idVia);
         }
 
-        dao.update(e);
-        System.out.println(" Modificat");
+        controller.actualizar(e);
+        System.out.println("Modificat");
     }
 
     private void eliminar() {
-        dao.delete(
+        controller.eliminar(
                 Validacions.llegirEnterNoNegatiu(sc, "ID: ")
         );
-        System.out.println(" Eliminat");
+        System.out.println("Eliminat");
     }
 
     private String llegirGrauMaxim() {
         while (true) {
             String grau = Validacions.llegirTextNoBuit(sc, "Nivell màxim: ");
             if (GrauDificultat.fromValor(grau) != null) {
-                return AuxEscalador.normalitzarGrau(grau);
+                return controller.normalizarGrau(grau);
             }
             System.out.println("Grau no vàlid.");
         }
@@ -147,8 +145,8 @@ public class MenuEscaladors {
     private String llegirEstilPreferit() {
         while (true) {
             String estil = Validacions.llegirTextNoBuit(sc, "Estil preferit: ");
-            if (AuxEscalador.estilValid(estil)) {
-                return AuxEscalador.normalitzarEstil(estil);
+            if (controller.estilValid(estil)) {
+                return controller.normalizarEstil(estil);
             }
             System.out.println("Estil no vàlid.");
         }
@@ -157,14 +155,12 @@ public class MenuEscaladors {
     private int llegirViaMax() {
         while (true) {
             int id = Validacions.llegirEnterNoNegatiu(sc, "ID via màxima (0 si no n'hi ha): ");
-            if (id == 0 || viaDAO.findById(id) != null) {
+            if (id == 0 || controller.existeVia(id)) {
                 return id;
             }
             System.out.println("La via no existeix.");
         }
     }
-
-
 
     private int parseEnter(String valor, int perDefecte) {
         try {

@@ -14,7 +14,7 @@ public class Vista {
         System.out.println("2. Sectors");
         System.out.println("3. Vies");
         System.out.println("4. Escaladors");
-        System.out.println("5. Cerques");
+        System.out.println("5. Cerca");
         System.out.println("0. Sortir");
     }
 
@@ -71,4 +71,3 @@ public class Vista {
         System.out.println("0. Tornar enrere");
     }
 }
-

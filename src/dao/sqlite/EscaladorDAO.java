@@ -25,6 +25,13 @@ public class EscaladorDAO implements dao<Escalador, Integer> {
     @Override
     public void insert(Escalador e) {
 
+        //Validacio abans d'inserir
+        if (existsAlias(e.getAlias())) {
+            System.err.println("Error: ja existeix un escalador amb aquest alias.");
+            return;
+        }
+
+
         // Defineixo la consulta SQL amb placeholders
         String sql = "INSERT INTO escalador (nom, alias, edat, nivell_max, estil_preferit, id_via_max) VALUES (?, ?, ?, ?, ?, ?)";
 
@@ -196,38 +203,18 @@ public class EscaladorDAO implements dao<Escalador, Integer> {
      * Busca un escalador por alias.
      */
     public Escalador findByAlias(String alias) {
+        String sql = "SELECT * FROM escalador WHERE alias=?";
 
-        String sql = "SELECT * FROM escalador WHERE LOWER(alias) = LOWER(?)";
+        try (Connection conn = ConnectionDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, alias);
+            ResultSet rs = ps.executeQuery();
 
-
-        try {
-            Connection conn = ConnectionDB.getConnection();
-            if (conn == null) {
-                System.err.println("No s'ha pogut obtenir la connexió.");
-                return null;
+            if (rs.next()) {
+                return map(rs);
             }
-
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-
-                ps.setString(1, alias);
-
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) {
-                        return new Escalador(
-                                rs.getInt("id_escalador"),
-                                rs.getString("nom"),
-                                rs.getString("alias"),
-                                rs.getInt("edat"),
-                                rs.getString("nivell_max"),
-                                rs.getString("estil_preferit"),
-                                rs.getInt("id_via_max")
-                        );
-                    }
-                }
-            }
-
         } catch (SQLException e) {
-            System.err.println("Error cercant escalador per alias: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Error cercant escalador per alias", e);
         }
 
         return null;
@@ -237,44 +224,46 @@ public class EscaladorDAO implements dao<Escalador, Integer> {
      * Busca escaladors per nivell màxim.
      */
     public List<Escalador> findByNivell(String nivell) {
+        List<Escalador> lista = new ArrayList<>();
+        String sql = "SELECT * FROM escalador WHERE nivell_max=?";
 
-        List<Escalador> llista = new ArrayList<>();
-        String sql = "SELECT * FROM escalador WHERE LOWER(nivell_max) = LOWER(?)";
+        try (Connection conn = ConnectionDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, nivell);
+            ResultSet rs = ps.executeQuery();
 
-
-        try {
-            Connection conn = ConnectionDB.getConnection();
-            if (conn == null) {
-                System.err.println("No s'ha pogut obtenir la connexió.");
-                return llista;
+            while (rs.next()) {
+                lista.add(map(rs));
             }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error cercant escaladors per nivell", e);
+        }
 
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+        return lista;
+    }
 
-                ps.setString(1, nivell);
+    /**
+     * Comprueba si ya existe un alias en la base de datos.
+     */
+    public boolean existsAlias(String alias) {
 
-                try (ResultSet rs = ps.executeQuery()) {
-                    while (rs.next()) {
-                        llista.add(new Escalador(
-                                rs.getInt("id_escalador"),
-                                rs.getString("nom"),
-                                rs.getString("alias"),
-                                rs.getInt("edat"),
-                                rs.getString("nivell_max"),
-                                rs.getString("estil_preferit"),
-                                rs.getInt("id_via_max")
-                        ));
-                    }
-                }
+        String sql = "SELECT 1 FROM escalador WHERE alias = ?";
+
+        try (Connection conn = ConnectionDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, alias);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next(); // si hay fila → existe
             }
 
         } catch (SQLException e) {
-            System.err.println("Error cercant escaladors per nivell: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Error comprobant alias duplicat", e);
         }
 
-        return llista;
+        return false;
     }
-
 
     /**
      * Transformo una fila del ResultSet en un objecte Escalador.

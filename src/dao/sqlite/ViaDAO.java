@@ -3,6 +3,7 @@ package dao.sqlite;
 import dao.ConnectionDB;
 import dao.dao;
 import model.Via;
+import helpers.AuxVia;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -24,9 +25,19 @@ public class ViaDAO implements dao<Via, Integer> {
     @Override
     public void insert(Via via) {
 
+        // VALIDACIÓ D'ANCORATGES SEGONS EL TIPUS DE VIA
+        String ancoratge = via.getAncoratges();
+        String tipusVia = via.getTipus();
+
+        if (!AuxVia.anclajeValida(ancoratge, tipusVia)) {
+            LOGGER.severe("Ancoratges no vàlids per al tipus de via: " + tipusVia);
+            return;
+        }
+
         String sql = "INSERT INTO vies (nom, grau, orientacio, estat, data_estat, tipus, ancoratges, tipus_roca, id_creador, id_sector, id_escola, restriccions) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = ConnectionDB.getConnection()) {
+
             if (conn == null) {
                 LOGGER.severe("No s'ha pogut obtenir la connexió per inserir una via.");
                 return;
@@ -241,6 +252,26 @@ public class ViaDAO implements dao<Via, Integer> {
         }
 
         return null;
+    }
+
+    //metode per cercar una via pel seu tipus
+    public List<Via> findByTipus(String tipus) {
+        List<Via> lista = new ArrayList<>();
+        String sql = "SELECT * FROM vies WHERE tipus=?";
+
+        try (Connection conn = ConnectionDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, tipus);
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                lista.add(mapResultSetToVia(rs));
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error cercant vies per tipus", e);
+        }
+
+        return lista;
     }
 
     //   Busca totes les vies d'un sector.

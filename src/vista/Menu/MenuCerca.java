@@ -1,32 +1,11 @@
 package vista.Menu;
 
-import dao.ConnectionDB;
-import dao.sqlite.EscaladorDAO;
-import dao.sqlite.EscolaDAO;
-import dao.sqlite.SectorDAO;
-import dao.sqlite.ViaClassicaDAO;
-import dao.sqlite.ViaDAO;
-import dao.sqlite.ViaEsportivaDAO;
-import dao.sqlite.ViaGelDAO;
+import controlador.CercaController;
 import excepcions.Validacions;
-import helpers.AuxCerca;
-import helpers.AuxVia;
-import model.Escalador;
-import model.Escola;
-import model.Sector;
-import model.Via;
-import model.ViaClassica;
-import model.ViaEsportiva;
-import model.ViaGel;
-import model.enums.EstatVia;
-import model.enums.GrauDificultat;
-import model.enums.TipusVia;
+import model.*;
+import model.enums.*;
 import vista.Vista;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.sql.Connection;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -34,48 +13,23 @@ import java.util.Scanner;
 public class MenuCerca {
 
     private final Scanner sc;
-    private final ViaDAO viaDAO;
-    private final EscolaDAO escolaDAO;
-    private final SectorDAO sectorDAO;
-    private final EscaladorDAO escaladorDAO;
-    private final ViaEsportivaDAO viaEsportivaDAO;
-    private final ViaClassicaDAO viaClassicaDAO;
-    private final ViaGelDAO viaGelDAO;
+    private final CercaController controller;
 
-    public MenuCerca(Scanner sc, ViaDAO viaDAO) {
-        this(sc, viaDAO,
-                crearEscolaDAO(),
-                crearSectorDAO(),
-                new EscaladorDAO(),
-                new ViaEsportivaDAO(),
-                new ViaClassicaDAO(),
-                new ViaGelDAO());
-    }
-
-    public MenuCerca(Scanner sc, ViaDAO viaDAO, EscolaDAO escolaDAO, SectorDAO sectorDAO,
-                     EscaladorDAO escaladorDAO, ViaEsportivaDAO viaEsportivaDAO,
-                     ViaClassicaDAO viaClassicaDAO, ViaGelDAO viaGelDAO) {
+    public MenuCerca(Scanner sc, CercaController controller) {
         this.sc = sc;
-        this.viaDAO = viaDAO;
-        this.escolaDAO = escolaDAO;
-        this.sectorDAO = sectorDAO;
-        this.escaladorDAO = escaladorDAO;
-        this.viaEsportivaDAO = viaEsportivaDAO;
-        this.viaClassicaDAO = viaClassicaDAO;
-        this.viaGelDAO = viaGelDAO;
+        this.controller = controller;
     }
 
     public void menu() {
-
         int op;
 
         do {
             Vista.menuBusquedas();
 
-            op = Validacions.llegirOpcio(sc, "Opció: ", 0, 8);
+            op = Validacions.llegirOpcio(sc, "Opcio: ", 0, 10);
 
             switch (op) {
-                case 1 -> viesDunaEscolaDisponibles();
+                case 1 -> viesDunaEscola();
                 case 2 -> viesPerDificultat();
                 case 3 -> viesPerEstat();
                 case 4 -> escolesAmbRestriccions();
@@ -90,270 +44,107 @@ public class MenuCerca {
         } while (op != 0);
     }
 
-    //Buscar escalador per alias
-    private void buscarEscaladorPerAlias() {
-        String alias = Validacions.llegirTextNoBuit(sc, "Alias: ");
-
-        Escalador e = escaladorDAO.findByAlias(alias);
-
-        if (e == null) {
-            System.out.println("No trobat");
-            return;
+    private void viesDunaEscola() {
+        int idEscola = Validacions.llegirEnterNoNegatiu(sc, "ID Escola: ");
+        List<Via> vies = controller.viesDunaEscolaDisponibles(idEscola);
+        if (vies.isEmpty()) {
+            System.out.println("No hi ha vies disponibles");
+        } else {
+            vies.forEach(v -> System.out.println(v.getIdVia() + " - " + v.getNom() + " | " + v.getGrau()));
         }
-
-        System.out.println(e);
-    }
-
-    //Buscar escaladors per nivell
-    private void buscarEscaladorsPerNivell() {
-        String nivell = Validacions.llegirTextNoBuit(sc, "Nivell: ");
-
-        List<Escalador> list = escaladorDAO.findByNivell(nivell);
-
-        if (list.isEmpty()) {
-            System.out.println("Sense resultats");
-            return;
-        }
-
-        for (Escalador e : list) {
-            System.out.println(e.getIdEscalador() + " - " + e.getNom() + " (" + e.getAlias() + ")");
-        }
-    }
-
-    private void viesDunaEscolaDisponibles() {
-        int id = Validacions.llegirEnterNoNegatiu(sc, "ID escola: ");
-        Escola escola = escolaDAO.findById(id);
-        if (escola == null) {
-            System.out.println("L'escola no existeix.");
-            return;
-        }
-
-        List<Via> resultat = new java.util.ArrayList<>();
-        List<Via> totes = AuxCerca.viesDunaEscola(viaDAO.findAll(), id);
-        for (Via via : totes) {
-            if (AuxVia.esApte(via)) {
-                resultat.add(via);
-            }
-        }
-        mostrarVies(resultat);
     }
 
     private void viesPerDificultat() {
-        GrauDificultat min = llegirGrau("Grau mínim: ");
-        GrauDificultat max = llegirGrau("Grau màxim: ");
-
-        if (min.ordinal() > max.ordinal()) {
-            GrauDificultat aux = min;
-            min = max;
-            max = aux;
+        String minStr = Validacions.llegirTextNoBuit(sc, "Grau mínim: ");
+        String maxStr = Validacions.llegirTextNoBuit(sc, "Grau màxim: ");
+        GrauDificultat min = GrauDificultat.fromValor(minStr);
+        GrauDificultat max = GrauDificultat.fromValor(maxStr);
+        if (min == null || max == null) {
+            System.out.println("Graus no vàlids");
+            return;
         }
-
-        List<Via> resultat = new java.util.ArrayList<>();
-        List<Via> totes = viaDAO.findAll();
-        for (Via via : totes) {
-            GrauDificultat grau = GrauDificultat.fromValor(via.getGrau());
-            if (grau != null && grau.ordinal() >= min.ordinal() && grau.ordinal() <= max.ordinal()) {
-                resultat.add(via);
-            }
-        }
-
-        mostrarVies(resultat);
+        List<Via> vies = controller.viesPerDificultat(min, max);
+        vies.forEach(v -> System.out.println(v.getNom() + " - " + v.getGrau()));
     }
 
     private void viesPerEstat() {
-        EstatVia estat = llegirEstat();
-        mostrarVies(AuxCerca.viesPerEstat(viaDAO.findAll(), estat.getValor()));
+        String estatStr = Validacions.llegirTextNoBuit(sc, "Estat: ");
+        EstatVia estat = EstatVia.fromValor(estatStr);
+        if (estat == null) {
+            System.out.println("Estat no vàlid");
+            return;
+        }
+        List<Via> vies = controller.viesPerEstat(estat);
+        vies.forEach(v -> System.out.println(v.getNom() + " - " + v.getEstat()));
     }
 
     private void escolesAmbRestriccions() {
-        List<Escola> totes = escolaDAO.findAll();
-        List<Escola> resultat = new java.util.ArrayList<>();
-
-        for (Escola escola : totes) {
-            if (escola.getRestriccions() != null && !escola.getRestriccions().isBlank()) {
-                resultat.add(escola);
-            }
-        }
-
-        if (resultat.isEmpty()) {
-            System.out.println("Sense resultats");
-            return;
-        }
-
-        for (Escola escola : resultat) {
-            System.out.println(escola.getIdEscola() + " - " + escola.getNom()
-                    + " | restriccions: " + escola.getRestriccions());
+        List<Escola> escoles = controller.escolesAmbRestriccions();
+        if (escoles.isEmpty()) {
+            System.out.println("No hi ha escoles amb restriccions");
+        } else {
+            escoles.forEach(e -> System.out.println(e.getNom() + " - " + e.getRestriccions()));
         }
     }
 
     private void sectorsAmbMesDeX() {
-        int x = Validacions.llegirEnterNoNegatiu(sc, "X: ");
-        List<Sector> sectors = AuxCerca.sectorsAmbMesDeX(sectorDAO.findAll(), viaDAO.findAll(), x);
+        int x = Validacions.llegirEnterNoNegatiu(sc, "Nombre mínim de vies: ");
+        List<Sector> sectors = controller.sectorsAmbMesDeX(x);
         if (sectors.isEmpty()) {
-            System.out.println("Sense resultats");
-            return;
-        }
-
-        for (Sector sector : sectors) {
-            long count = 0;
-            List<Via> totes = viaDAO.findAll();
-            for (Via via : totes) {
-                if (via.getIdSector() == sector.getIdSector() && AuxVia.esApte(via)) {
-                    count++;
-                }
-            }
-            System.out.println(sector.getIdSector() + " - " + sector.getNom() + " | " + count + " vies disponibles");
+            System.out.println("No hi ha sectors amb més de " + x + " vies");
+        } else {
+            sectors.forEach(s -> System.out.println(s.getNom()));
         }
     }
 
     private void escaladorsMateixNivell() {
-        Map<String, List<Escalador>> grups = AuxCerca.escaladorsMateixNivell(escaladorDAO.findAll());
-        boolean trobat = false;
-
-        for (Map.Entry<String, List<Escalador>> entry : grups.entrySet()) {
-            if (entry.getValue().size() > 1) {
-                trobat = true;
-                System.out.println("Nivell " + entry.getKey() + ":");
-                for (Escalador e : entry.getValue()) {
-                    System.out.println("  - " + e.getIdEscalador() + " - " + e.getNom() + " (" + e.getAlias() + ")");
-                }
-            }
-        }
-
-        if (!trobat) {
-            System.out.println("Sense resultats");
+        Map<String, List<Escalador>> map = controller.escaladorsMateixNivell();
+        if (map.isEmpty()) {
+            System.out.println("No hi ha escaladors agrupats per nivell");
+        } else {
+            map.forEach((nivell, list) -> {
+                System.out.println("Nivell: " + nivell);
+                list.forEach(e -> System.out.println("  " + e.getAlias()));
+            });
         }
     }
 
     private void viesApteRecentment() {
-        LocalDate llindar = LocalDate.now().minusDays(30);
-        List<Via> resultat = new java.util.ArrayList<>();
-        List<Via> totes = viaDAO.findAll();
-        for (Via via : totes) {
-            if (AuxVia.esApte(via) && dataValida(via.getDataEstat())) {
-                LocalDate data = LocalDate.parse(via.getDataEstat(), DateTimeFormatter.ISO_LOCAL_DATE);
-                if (!data.isBefore(llindar)) {
-                    resultat.add(via);
-                }
-            }
+        List<Via> vies = controller.viesApteRecentment();
+        if (vies.isEmpty()) {
+            System.out.println("No hi ha vies aptes recentment");
+        } else {
+            vies.forEach(v -> System.out.println(v.getNom() + " - Data: " + v.getDataEstat()));
         }
-        mostrarVies(resultat);
     }
 
     private void viesMesLlarguesEscola() {
-        int idEscola = Validacions.llegirEnterNoNegatiu(sc, "ID escola: ");
-        Escola escola = escolaDAO.findById(idEscola);
-        if (escola == null) {
-            System.out.println("L'escola no existeix.");
-            return;
+        int idEscola = Validacions.llegirEnterNoNegatiu(sc, "ID Escola: ");
+        List<Via> vies = controller.viesMesLlarguesEscola(idEscola);
+        if (vies.isEmpty()) {
+            System.out.println("No hi ha vies en aquesta escola");
+        } else {
+            vies.forEach(v -> System.out.println(v.getNom() + " - Grau: " + v.getGrau()));
         }
-
-        List<Via> resultat = new java.util.ArrayList<>();
-        List<Via> totes = viaDAO.findAll();
-        int max = -1;
-
-        for (Via via : totes) {
-            if (via.getIdEscola() != idEscola) {
-                continue;
-            }
-
-            int llargada = llargadaVia(via);
-            if (llargada > max) {
-                max = llargada;
-                resultat.clear();
-                resultat.add(via);
-            } else if (llargada == max) {
-                resultat.add(via);
-            }
-        }
-
-        mostrarVies(resultat);
     }
 
-    private void mostrarVies(List<Via> list) {
+    private void buscarEscaladorPerAlias() {
+        String alias = Validacions.llegirTextNoBuit(sc, "Alias: ");
+        Escalador e = controller.buscarEscaladorPerAlias(alias);
+        if (e == null) {
+            System.out.println("No trobat");
+        } else {
+            System.out.println(e.getAlias() + " - Nivell: " + e.getNivellMax());
+        }
+    }
 
+    private void buscarEscaladorsPerNivell() {
+        String nivell = Validacions.llegirTextNoBuit(sc, "Nivell: ");
+        List<Escalador> list = controller.buscarEscaladorsPerNivell(nivell);
         if (list.isEmpty()) {
-            System.out.println("Sense resultats");
-            return;
+            System.out.println("No hi ha escaladors amb aquest nivell");
+        } else {
+            list.forEach(e -> System.out.println(e.getAlias()));
         }
-
-        for (Via via : list) {
-            mostrarVia(via);
-        }
-    }
-
-    private void mostrarVia(Via via) {
-        Escola escola = escolaDAO.findById(via.getIdEscola());
-        Sector sector = sectorDAO.findById(via.getIdSector());
-
-        System.out.println(via.getIdVia() + " - " + via.getNom() +
-                " | " + via.getTipus() +
-                " | grau=" + via.getGrau() +
-                " | estat=" + via.getEstat() +
-                " | escola=" + (escola == null ? via.getIdEscola() : escola.getNom()) +
-                " | sector=" + (sector == null ? via.getIdSector() : sector.getNom()));
-    }
-
-    private GrauDificultat llegirGrau(String missatge) {
-        while (true) {
-            String valor = Validacions.llegirTextNoBuit(sc, missatge);
-            GrauDificultat grau = GrauDificultat.fromValor(valor);
-            if (grau != null) return grau;
-            System.out.println("Grau no vàlid.");
-        }
-    }
-
-    private EstatVia llegirEstat() {
-        while (true) {
-            EstatVia estat = EstatVia.fromValor(Validacions.llegirTextNoBuit(sc, "Estat: "));
-            if (estat != null) return estat;
-            System.out.println("Estat no vàlid.");
-        }
-    }
-
-    private boolean dataValida(String data) {
-        try {
-            if (data == null || data.isBlank()) {
-                return false;
-            }
-            LocalDate.parse(data, DateTimeFormatter.ISO_LOCAL_DATE);
-            return true;
-        } catch (DateTimeParseException e) {
-            return false;
-        }
-    }
-
-    private static EscolaDAO crearEscolaDAO() {
-        EscolaDAO dao = new EscolaDAO();
-        Connection conn = ConnectionDB.getConnection();
-        if (conn != null) {
-            dao.setConnection(conn);
-        }
-        return dao;
-    }
-
-    private static SectorDAO crearSectorDAO() {
-        SectorDAO dao = new SectorDAO();
-        Connection conn = ConnectionDB.getConnection();
-        if (conn != null) {
-            dao.setConnection(conn);
-        }
-        return dao;
-    }
-
-    private int llargadaVia(Via via) {
-        if (TipusVia.ESPORTIVA.getValor().equalsIgnoreCase(via.getTipus())) {
-            ViaEsportiva ve = viaEsportivaDAO.findById(via.getIdVia());
-            return ve == null ? 0 : ve.getLlargada();
-        }
-        if (TipusVia.CLASSICA.getValor().equalsIgnoreCase(via.getTipus())) {
-            ViaClassica vc = viaClassicaDAO.findById(via.getIdVia());
-            return vc == null ? 0 : vc.getLlargadaTotal();
-        }
-        if (TipusVia.GEL.getValor().equalsIgnoreCase(via.getTipus())) {
-            ViaGel vg = viaGelDAO.findById(via.getIdVia());
-            return vg == null ? 0 : vg.getLlargadaTotal();
-        }
-        return 0;
     }
 }
