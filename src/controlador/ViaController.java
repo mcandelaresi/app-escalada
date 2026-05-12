@@ -1,11 +1,14 @@
 package controlador;
 
 import dao.sqlite.*;
+import excepcions.Validacions;
 import model.*;
+import model.enums.TipusVia;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Scanner;
 
 public class ViaController {
 
@@ -34,19 +37,86 @@ public class ViaController {
         this.escaladorDAO = escaladorDAO;
     }
 
+    public void modificarVia(Scanner sc) {
 
-    // CRUD
-    public void crear(Via v, Object subtype) {
+        int id = Validacions.llegirEnterNoNegatiu(sc, "ID: ");
+        Via v = buscar(id);
+
+        if (v == null) {
+            System.out.println("No trobada");
+            return;
+        }
+
+        String nom = Validacions.llegirTextOpcional(sc, "Nom (" + v.getNom() + "): ");
+        if (!nom.isEmpty()) v.setNom(nom);
+
+        String grau = Validacions.llegirTextOpcional(sc, "Grau (" + v.getGrau() + "): ");
+        if (!grau.isEmpty()) v.setGrau(grau);
+
+        String estat = Validacions.llegirTextOpcional(sc, "Estat (" + v.getEstat() + "): ");
+        if (!estat.isEmpty()) v.setEstat(estat);
+
+        viaDAO.update(v);
+
+        System.out.println("Modificada");
+    }
+
+    public void crearVia(Scanner sc) {
+
+        String nom = Validacions.llegirTextNoBuit(sc, "Nom: ");
+
+        int idEscola = Validacions.llegirEnterNoNegatiu(sc, "ID escola: ");
+        if (!escolaExisteix(idEscola)) {
+            System.out.println("Escola no existeix");
+            return;
+        }
+
+        int idSector = Validacions.llegirEnterNoNegatiu(sc, "ID sector: ");
+        if (!sectorValido(idSector, idEscola)) {
+            System.out.println("Sector no vàlid");
+            return;
+        }
+
+        if (!viaNomDisponible(nom, idEscola)) {
+            System.out.println("Ja existeix una via amb aquest nom");
+            return;
+        }
+
+        String tipus = Validacions.llegirTextNoBuit(sc, "Tipus (Esportiva/Classica/Gel): ");
+
+        String grau = Validacions.llegirTextNoBuit(sc, "Grau: ");
+        String orientacio = Validacions.llegirTextNoBuit(sc, "Orientacio: ");
+
+        String estat = "APTE";
+        String dataEstat = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
+
+        String ancoratges = Validacions.llegirTextNoBuit(sc, "Ancoratges: ");
+        String roca = Validacions.llegirTextNoBuit(sc, "Tipus roca: ");
+        String restriccions = Validacions.llegirTextOpcional(sc, "Restriccions: ");
+
+        Via v = new Via(
+                0,
+                nom,
+                grau,
+                orientacio,
+                estat,
+                dataEstat,
+                tipus,
+                ancoratges,
+                roca,
+                0,
+                idSector,
+                idEscola,
+                restriccions
+        ) {};
+
         viaDAO.insert(v);
 
-        if (subtype instanceof ViaEsportiva ve) {
-            viaEsportivaDAO.insert(ve);
-        } else if (subtype instanceof ViaClassica vc) {
-            viaClassicaDAO.insert(vc);
-        } else if (subtype instanceof ViaGel vg) {
-            viaGelDAO.insert(vg);
-        }
+        System.out.println("Via creada amb ID " + v.getIdVia());
     }
+
+    // CRUD BASE
+
 
     public Via buscar(int id) {
         return viaDAO.findById(id);
@@ -56,12 +126,18 @@ public class ViaController {
         return viaDAO.findAll();
     }
 
+    public void update(Via v) {
+        viaDAO.update(v);
+    }
+
     public void eliminar(Via v) {
         if (v == null) return;
 
-        if (v.getTipus().equalsIgnoreCase("Esportiva")) {
+        TipusVia tipus = TipusVia.fromValor(v.getTipus());
+
+        if (tipus == TipusVia.ESPORTIVA) {
             viaEsportivaDAO.delete(v.getIdVia());
-        } else if (v.getTipus().equalsIgnoreCase("Classica")) {
+        } else if (tipus == TipusVia.CLASSICA) {
             viaClassicaDAO.delete(v.getIdVia());
         } else {
             viaGelDAO.delete(v.getIdVia());
@@ -70,11 +146,8 @@ public class ViaController {
         viaDAO.delete(v.getIdVia());
     }
 
-    public void update(Via v) {
-        viaDAO.update(v);
-    }
 
-    // VALIDACIONS / AUX
+    // VALIDACIONS
 
     public boolean escolaExisteix(int id) {
         return escolaDAO.findById(id) != null;
@@ -89,21 +162,36 @@ public class ViaController {
         return viaDAO.findByNomAndEscola(nom, idEscola) == null;
     }
 
-    public String avui() {
-        return LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE);
-    }
+
+    // ESTATS
 
     public void actualitzarEstatsCaducats() {
+
         List<Via> vies = viaDAO.findAll();
+
         for (Via v : vies) {
-            if (v.getDataEstat() != null && LocalDate.parse(v.getDataEstat()).isBefore(LocalDate.now())) {
-                v.setEstat("Caducada");
-                viaDAO.update(v);
+
+            if (v.getDataEstat() == null || v.getDataEstat().isBlank()) continue;
+
+            try {
+                LocalDate data = LocalDate.parse(v.getDataEstat());
+
+                if (data.isBefore(LocalDate.now()) &&
+                        !"APTE".equalsIgnoreCase(v.getEstat())) {
+
+                    v.setEstat("APTE");
+                    v.setDataEstat(LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE));
+
+                    viaDAO.update(v);
+                }
+
+            } catch (Exception ignored) {
             }
         }
     }
 
-    // getters
+
+    // GETTER
     public EscaladorDAO getEscaladorDAO() {
         return escaladorDAO;
     }

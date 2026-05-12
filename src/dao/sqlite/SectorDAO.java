@@ -1,5 +1,6 @@
 package dao.sqlite;
 
+import dao.ConnectionDB;
 import dao.dao;
 import model.Sector;
 
@@ -9,23 +10,20 @@ import java.util.List;
 
 public class SectorDAO implements dao<Sector, Integer> {
 
-    private Connection connection;
-
-    public void setConnection(Connection connection) {
-        this.connection = connection;
-    }
-
     @Override
     public void insert(Sector s) {
 
-        String sql = "INSERT INTO sectors (nom, latitud, longitud, aproximacio, popularitat, restriccions, id_escola) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        Connection conn = ConnectionDB.getConnection();
 
-        if (connection == null) {
+        if (conn == null) {
             System.err.println("No hi ha connexió per inserir un sector.");
             return;
         }
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        String sql = "INSERT INTO sectors (nom, latitud, longitud, aproximacio, popularitat, restriccions, id_escola) VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+        try (conn;
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setString(1, s.getNom());
             stmt.setDouble(2, s.getLatitud());
@@ -51,29 +49,33 @@ public class SectorDAO implements dao<Sector, Integer> {
     @Override
     public Sector findById(Integer id) {
 
-        String sql = "SELECT * FROM sectors WHERE id_sector=?";
+        Connection conn = ConnectionDB.getConnection();
 
-        if (connection == null) {
+        if (conn == null) {
             System.err.println("No hi ha connexió per cercar un sector.");
             return null;
         }
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        String sql = "SELECT * FROM sectors WHERE id_sector=?";
+
+        try (conn;
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, id);
-            ResultSet rs = stmt.executeQuery();
 
-            if (rs.next()) {
-                return new Sector(
-                        rs.getInt("id_sector"),
-                        rs.getString("nom"),
-                        rs.getDouble("latitud"),
-                        rs.getDouble("longitud"),
-                        rs.getString("aproximacio"),
-                        rs.getString("popularitat"),
-                        rs.getString("restriccions"),
-                        rs.getInt("id_escola")
-                );
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new Sector(
+                            rs.getInt("id_sector"),
+                            rs.getString("nom"),
+                            rs.getDouble("latitud"),
+                            rs.getDouble("longitud"),
+                            rs.getString("aproximacio"),
+                            rs.getString("popularitat"),
+                            rs.getString("restriccions"),
+                            rs.getInt("id_escola")
+                    );
+                }
             }
 
         } catch (SQLException e) {
@@ -87,14 +89,18 @@ public class SectorDAO implements dao<Sector, Integer> {
     public List<Sector> findAll() {
 
         List<Sector> llista = new ArrayList<>();
-        String sql = "SELECT * FROM sectors";
 
-        if (connection == null) {
+        Connection conn = ConnectionDB.getConnection();
+
+        if (conn == null) {
             System.err.println("No hi ha connexió per llistar els sectors.");
             return llista;
         }
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql);
+        String sql = "SELECT * FROM sectors";
+
+        try (conn;
+             PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
@@ -119,14 +125,18 @@ public class SectorDAO implements dao<Sector, Integer> {
 
     public Sector findByNomAndEscola(String nom, int idEscola) {
 
-        String sql = "SELECT * FROM sectors WHERE LOWER(nom) = LOWER(?) AND id_escola = ?";
+        Connection conn = ConnectionDB.getConnection();
 
-        if (connection == null) {
+        if (conn == null) {
             System.err.println("No hi ha connexió per cercar un sector per nom i escola.");
             return null;
         }
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        String sql = "SELECT * FROM sectors WHERE LOWER(nom) = LOWER(?) AND id_escola = ?";
+
+        try (conn;
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setString(1, nom);
             stmt.setInt(2, idEscola);
 
@@ -144,6 +154,7 @@ public class SectorDAO implements dao<Sector, Integer> {
                     );
                 }
             }
+
         } catch (SQLException e) {
             System.err.println("Error cercant sector per nom i escola: " + e.getMessage());
         }
@@ -154,14 +165,17 @@ public class SectorDAO implements dao<Sector, Integer> {
     @Override
     public void update(Sector s) {
 
-        String sql = "UPDATE sectors SET nom=?, latitud=?, longitud=?, aproximacio=?, popularitat=?, restriccions=?, id_escola=? WHERE id_sector=?";
+        Connection conn = ConnectionDB.getConnection();
 
-        if (connection == null) {
+        if (conn == null) {
             System.err.println("No hi ha connexió per actualitzar un sector.");
             return;
         }
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        String sql = "UPDATE sectors SET nom=?, latitud=?, longitud=?, aproximacio=?, popularitat=?, restriccions=?, id_escola=? WHERE id_sector=?";
+
+        try (conn;
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, s.getNom());
             stmt.setDouble(2, s.getLatitud());
@@ -182,14 +196,17 @@ public class SectorDAO implements dao<Sector, Integer> {
     @Override
     public void delete(Integer id) {
 
-        String sql = "DELETE FROM sectors WHERE id_sector=?";
+        Connection conn = ConnectionDB.getConnection();
 
-        if (connection == null) {
+        if (conn == null) {
             System.err.println("No hi ha connexió per eliminar un sector.");
             return;
         }
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        String sql = "DELETE FROM sectors WHERE id_sector=?";
+
+        try (conn;
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, id);
             stmt.executeUpdate();

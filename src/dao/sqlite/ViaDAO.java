@@ -256,17 +256,30 @@ public class ViaDAO implements dao<Via, Integer> {
 
     //metode per cercar una via pel seu tipus
     public List<Via> findByTipus(String tipus) {
+
         List<Via> lista = new ArrayList<>();
+
         String sql = "SELECT * FROM vies WHERE tipus=?";
 
-        try (Connection conn = ConnectionDB.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, tipus);
-            ResultSet rs = ps.executeQuery();
+        try (Connection conn = ConnectionDB.getConnection()) {
 
-            while (rs.next()) {
-                lista.add(mapResultSetToVia(rs));
+            if (conn == null) {
+                LOGGER.severe("No s'ha pogut obtenir connexió");
+                return lista;
             }
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+                ps.setString(1, tipus);
+
+                try (ResultSet rs = ps.executeQuery()) {
+
+                    while (rs.next()) {
+                        lista.add(mapResultSetToVia(rs));
+                    }
+                }
+            }
+
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error cercant vies per tipus", e);
         }
