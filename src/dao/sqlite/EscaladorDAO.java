@@ -203,16 +203,28 @@ public class EscaladorDAO implements dao<Escalador, Integer> {
      * Busca un escalador por alias.
      */
     public Escalador findByAlias(String alias) {
+
         String sql = "SELECT * FROM escalador WHERE alias=?";
 
-        try (Connection conn = ConnectionDB.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, alias);
-            ResultSet rs = ps.executeQuery();
+        try (Connection conn = ConnectionDB.getConnection()) {
 
-            if (rs.next()) {
-                return map(rs);
+            if (conn == null) {
+                LOGGER.severe("No s'ha pogut obtenir connexió");
+                return null;
             }
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+                ps.setString(1, alias);
+
+                try (ResultSet rs = ps.executeQuery()) {
+
+                    if (rs.next()) {
+                        return map(rs);
+                    }
+                }
+            }
+
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error cercant escalador per alias", e);
         }
@@ -224,17 +236,30 @@ public class EscaladorDAO implements dao<Escalador, Integer> {
      * Busca escaladors per nivell màxim.
      */
     public List<Escalador> findByNivell(String nivell) {
+
         List<Escalador> lista = new ArrayList<>();
+
         String sql = "SELECT * FROM escalador WHERE nivell_max=?";
 
-        try (Connection conn = ConnectionDB.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, nivell);
-            ResultSet rs = ps.executeQuery();
+        try (Connection conn = ConnectionDB.getConnection()) {
 
-            while (rs.next()) {
-                lista.add(map(rs));
+            if (conn == null) {
+                LOGGER.severe("No s'ha pogut obtenir connexió");
+                return lista;
             }
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+                ps.setString(1, nivell);
+
+                try (ResultSet rs = ps.executeQuery()) {
+
+                    while (rs.next()) {
+                        lista.add(map(rs));
+                    }
+                }
+            }
+
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Error cercant escaladors per nivell", e);
         }
@@ -249,17 +274,24 @@ public class EscaladorDAO implements dao<Escalador, Integer> {
 
         String sql = "SELECT 1 FROM escalador WHERE alias = ?";
 
-        try (Connection conn = ConnectionDB.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = ConnectionDB.getConnection()) {
 
-            ps.setString(1, alias);
+            if (conn == null) {
+                LOGGER.severe("No s'ha pogut obtenir connexió");
+                return false;
+            }
 
-            try (ResultSet rs = ps.executeQuery()) {
-                return rs.next(); // si hay fila → existe
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+
+                ps.setString(1, alias);
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    return rs.next();
+                }
             }
 
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error comprobant alias duplicat", e);
+            LOGGER.log(Level.SEVERE, "Error comprovant alias duplicat", e);
         }
 
         return false;

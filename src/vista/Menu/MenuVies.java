@@ -42,11 +42,11 @@ public class MenuVies {
     }
 
     private void crear() {
-        System.out.println("⚠ Aquí debes mover toda la lógica de creación al controlador");
-
+        controller.crearVia(sc);
     }
 
     private void llistarUna() {
+
         Via v = controller.buscar(
                 Validacions.llegirEnterNoNegatiu(sc, "ID: ")
         );
@@ -72,22 +72,30 @@ public class MenuVies {
     }
 
     private void modificar() {
-        System.out.println("⚠ mover lógica completa al controlador");
+        controller.modificarVia(sc);
     }
 
     private void eliminar() {
+
         Via v = controller.buscar(
                 Validacions.llegirEnterNoNegatiu(sc, "ID: ")
         );
+
+        if (v == null) {
+            System.out.println("No trobada");
+            return;
+        }
 
         controller.eliminar(v);
         System.out.println("Eliminada");
     }
 
     private void mostrar(Via v) {
-        System.out.println(v.getIdVia() + " - " + v.getNom() +
-                " | " + v.getTipus() +
-                " | " + v.getGrau() +
-                " | " + v.getEstat());
+        System.out.println(
+                v.getIdVia() + " - " + v.getNom() +
+                        " | " + v.getTipus() +
+                        " | " + v.getGrau() +
+                        " | " + v.getEstat()
+        );
     }
 }
