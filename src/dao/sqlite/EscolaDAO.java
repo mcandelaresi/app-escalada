@@ -1,5 +1,6 @@
 package dao.sqlite;
 
+import dao.ConnectionDB;
 import dao.dao;
 import model.Escola;
 
@@ -9,32 +10,21 @@ import java.util.List;
 
 public class EscolaDAO implements dao<Escola, Integer> {
 
-    private Connection connection;
-
-    public void setConnection(Connection connection) {
-        this.connection = connection;
-    }
+    public EscolaDAO() {}
 
     @Override
     public void insert(Escola escola) {
-
         String sql = "INSERT INTO escoles (nom, aproximacio, popularitat, restriccions) VALUES (?, ?, ?, ?)";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-
+        try (Connection conn = ConnectionDB.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, escola.getNom());
             stmt.setString(2, escola.getAproximacio());
             stmt.setString(3, escola.getPopularitat());
             stmt.setString(4, escola.getRestriccions());
-
             stmt.executeUpdate();
-
             try (ResultSet keys = stmt.getGeneratedKeys()) {
-                if (keys.next()) {
-                    escola.setIdEscola(keys.getInt(1));
-                }
+                if (keys.next()) escola.setIdEscola(keys.getInt(1));
             }
-
         } catch (SQLException e) {
             System.err.println("Error inserint escola: " + e.getMessage());
         }
@@ -42,101 +32,58 @@ public class EscolaDAO implements dao<Escola, Integer> {
 
     @Override
     public Escola findById(Integer id) {
-
         String sql = "SELECT * FROM escoles WHERE id_escola = ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-
+        try (Connection conn = ConnectionDB.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
-
             try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return new Escola(
-                            rs.getInt("id_escola"),
-                            rs.getString("nom"),
-                            rs.getString("aproximacio"),
-                            rs.getString("popularitat"),
-                            rs.getString("restriccions")
-                    );
-                }
+                if (rs.next()) return map(rs);
             }
-
         } catch (SQLException e) {
             System.err.println("Error llegint escola: " + e.getMessage());
         }
-
         return null;
     }
 
     @Override
     public List<Escola> findAll() {
-
+        String sql = "SELECT * FROM escoles ORDER BY nom";
         List<Escola> llista = new ArrayList<>();
-
-        String sql = "SELECT * FROM escoles";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql);
+        try (Connection conn = ConnectionDB.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
-
-            while (rs.next()) {
-                llista.add(new Escola(
-                        rs.getInt("id_escola"),
-                        rs.getString("nom"),
-                        rs.getString("aproximacio"),
-                        rs.getString("popularitat"),
-                        rs.getString("restriccions")
-                ));
-            }
-
+            while (rs.next()) llista.add(map(rs));
         } catch (SQLException e) {
             System.err.println("Error llistant escoles: " + e.getMessage());
         }
-
         return llista;
     }
 
     public Escola findByNom(String nom) {
-
         String sql = "SELECT * FROM escoles WHERE LOWER(nom) = LOWER(?)";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-
+        try (Connection conn = ConnectionDB.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, nom);
-
             try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return new Escola(
-                            rs.getInt("id_escola"),
-                            rs.getString("nom"),
-                            rs.getString("aproximacio"),
-                            rs.getString("popularitat"),
-                            rs.getString("restriccions")
-                    );
-                }
+                if (rs.next()) return map(rs);
             }
-
         } catch (SQLException e) {
-            System.err.println("Error cercant escola: " + e.getMessage());
+            System.err.println("Error cercant escola per nom: " + e.getMessage());
         }
-
         return null;
     }
 
     @Override
     public void update(Escola escola) {
-
         String sql = "UPDATE escoles SET nom=?, aproximacio=?, popularitat=?, restriccions=? WHERE id_escola=?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-
+        try (Connection conn = ConnectionDB.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, escola.getNom());
             stmt.setString(2, escola.getAproximacio());
             stmt.setString(3, escola.getPopularitat());
             stmt.setString(4, escola.getRestriccions());
             stmt.setInt(5, escola.getIdEscola());
-
             stmt.executeUpdate();
-
         } catch (SQLException e) {
             System.err.println("Error actualitzant escola: " + e.getMessage());
         }
@@ -144,16 +91,23 @@ public class EscolaDAO implements dao<Escola, Integer> {
 
     @Override
     public void delete(Integer id) {
-
         String sql = "DELETE FROM escoles WHERE id_escola = ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-
+        try (Connection conn = ConnectionDB.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
             stmt.executeUpdate();
-
         } catch (SQLException e) {
             System.err.println("Error eliminant escola: " + e.getMessage());
         }
+    }
+
+    private Escola map(ResultSet rs) throws SQLException {
+        return new Escola(
+                rs.getInt("id_escola"),
+                rs.getString("nom"),
+                rs.getString("aproximacio"),
+                rs.getString("popularitat"),
+                rs.getString("restriccions")
+        );
     }
 }

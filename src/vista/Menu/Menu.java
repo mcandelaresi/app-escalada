@@ -1,71 +1,92 @@
-   package vista.Menu;
+package vista.Menu;
 
-   import controlador.*;
-   import dao.ConnectionDB;
-   import dao.sqlite.*;
-   import excepcions.Validacions;
-   import vista.Vista;
+import controlador.*;
+import dao.sqlite.*;
+import excepcions.Validacions;
 
-   import java.sql.Connection;
-   import java.util.Scanner;
+import java.util.Scanner;
 
-   public class Menu {
+public class Menu {
 
-       Connection conn = ConnectionDB.getConnection();
-       private final Scanner sc = new Scanner(System.in);
+    private final ViaController viaController;
+    private final EscolaController escolaController;
+    private final SectorController sectorController;
+    private final EscaladorController escaladorController;
+    private final CercaController cercaController;
 
-       private final MenuEscola menuEscola;
-       private final MenuSector menuSector;
-       private final MenuVies menuVia;
-       private final MenuEscaladors menuEscalador;
-       private final MenuCerca menuCerca;
+    private final Scanner sc = new Scanner(System.in);
 
-       public Menu() {
-           // Instancia los DAOs (capa de acceso a datos)
-           ViaDAO viaDAO = new ViaDAO();
-           EscolaDAO escolaDAO = new EscolaDAO();
-           SectorDAO sectorDAO = new SectorDAO();
-           EscaladorDAO escaladorDAO = new EscaladorDAO();
-           ViaEsportivaDAO viaEsportivaDAO = new ViaEsportivaDAO();
-           ViaClassicaDAO viaClassicaDAO = new ViaClassicaDAO(conn);
-           ViaGelDAO viaGelDAO = new ViaGelDAO();
+    public Menu() {
 
-           // Instancia controladores
-           EscolaController escolaController = new EscolaController();  // Este no necesita DAO
-           SectorController sectorController = new SectorController(sectorDAO);
-           ViaController viaController = new ViaController(viaDAO, viaEsportivaDAO, viaClassicaDAO, viaGelDAO, escolaDAO, sectorDAO, escaladorDAO);
-           EscaladorController escaladorController = new EscaladorController(escaladorDAO, viaDAO);
-           CercaController cercaController = new CercaController(viaDAO, escolaDAO, sectorDAO, escaladorDAO, viaEsportivaDAO, viaClassicaDAO, viaGelDAO);
+        // Els DAOs usen ConnectionDB.getConnection() de forma estàtica,
+        // no necessiten rebre la connexió al constructor.
+        ViaDAO viaDAO                 = new ViaDAO();
+        ViaEsportivaDAO viaEspDAO     = new ViaEsportivaDAO();
+        ViaClassicaDAO viaClasDAO     = new ViaClassicaDAO();
+        ViaGelDAO viaGelDAO           = new ViaGelDAO();
 
-           // Instancia menús con controladores
-           menuEscola = new MenuEscola(sc, escolaController);
-           menuSector = new MenuSector(sc, sectorController);
-           menuVia = new MenuVies(sc, viaController);
-           menuEscalador = new MenuEscaladors(sc, escaladorController);
-           menuCerca = new MenuCerca(sc, cercaController);
-       }
+        EscolaDAO escolaDAO           = new EscolaDAO();
+        SectorDAO sectorDAO           = new SectorDAO();
 
-       public void menu() {
-           int op;
+        EscaladorDAO escaladorDAO     = new EscaladorDAO();
+        RegistreDAO registreDAO       = new RegistreDAO();
 
-           Vista.intro();
+        TramDAO tramDAO               = new TramDAO();
 
-           do {
-               menuVia.actualitzarEstatsCaducats();
+        // Controllers (DI correcte)
+        this.viaController = new ViaController(
+                viaDAO, viaEspDAO, viaClasDAO, viaGelDAO, escaladorDAO
+        );
 
-               Vista.menuPrincipal();
+        this.escolaController = new EscolaController(
+                escolaDAO, sectorDAO
+        );
 
-               op = Validacions.llegirOpcio(sc, "Opció: ", 0, 5);
+        this.sectorController = new SectorController(
+                sectorDAO
+        );
 
-               switch (op) {
-                   case 1 -> menuEscola.menu();
-                   case 2 -> menuSector.menu();
-                   case 3 -> menuVia.menu();
-                   case 4 -> menuEscalador.menu();
-                   case 5 -> menuCerca.menu();
-                   case 0 -> System.out.println("Adeu!");
-               }
+        this.escaladorController = new EscaladorController(
+                escaladorDAO, viaDAO, registreDAO
+        );
 
-           } while (op != 0);
-       }
-   }
+        this.cercaController = new CercaController(
+                viaDAO, escolaDAO, sectorDAO, escaladorDAO, tramDAO
+        );
+    }
+
+    public void menu() {
+
+        boolean sortir = false;
+
+        while (!sortir) {
+
+            viaController.actualitzarEstatsCaducats();
+
+            System.out.println("\n╔══════════════════════════════════════╗");
+            System.out.println("║     GESTIÓ D'ESCALADA - PILLAM LTD  ║");
+            System.out.println("╠══════════════════════════════════════╣");
+            System.out.println("║  1. Gestió de Vies                  ║");
+            System.out.println("║  2. Gestió d'Escoles                ║");
+            System.out.println("║  3. Gestió de Sectors               ║");
+            System.out.println("║  4. Gestió d'Escaladors             ║");
+            System.out.println("║  5. Cerques                         ║");
+            System.out.println("║  0. Sortir                          ║");
+            System.out.println("╚══════════════════════════════════════╝");
+
+            int opcio = Validacions.llegirOpcio(sc, "Opció: ", 0, 5);
+
+            switch (opcio) {
+                case 1 -> new MenuVies(sc, viaController).menu();
+                case 2 -> new MenuEscola(sc, escolaController).menu();
+                case 3 -> new MenuSector(sc, sectorController).menu();
+                case 4 -> new MenuEscaladors(sc, escaladorController).menu();
+                case 5 -> new MenuCerca(sc, cercaController).menu();
+                case 0 -> sortir = true;
+            }
+        }
+
+        System.out.println("Fins aviat!");
+        sc.close();
+    }
+}

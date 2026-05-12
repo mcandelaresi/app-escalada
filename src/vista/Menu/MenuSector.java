@@ -3,10 +3,7 @@ package vista.Menu;
 import controlador.SectorController;
 import excepcions.Validacions;
 import model.Sector;
-import model.enums.Popularitat;
-import vista.Vista;
 
-import java.util.List;
 import java.util.Scanner;
 
 public class MenuSector {
@@ -20,138 +17,92 @@ public class MenuSector {
     }
 
     public void menu() {
+        boolean sortir = false;
+        while (!sortir) {
+            System.out.println("\n╔══════════════════════════════╗");
+            System.out.println("║      GESTIÓ DE SECTORS       ║");
+            System.out.println("╠══════════════════════════════╣");
+            System.out.println("║  1. Crear sector             ║");
+            System.out.println("║  2. Modificar sector         ║");
+            System.out.println("║  3. Veure sector (per ID)    ║");
+            System.out.println("║  4. Llistar tots els sectors ║");
+            System.out.println("║  5. Eliminar sector          ║");
+            System.out.println("║  0. Tornar                   ║");
+            System.out.println("╚══════════════════════════════╝");
 
-        int op;
-
-        do {
-            Vista.menuSectors();
-
-            op = Validacions.llegirOpcio(sc, "Opció: ", 0, 5);
-
-            switch (op) {
-                case 1 -> crear();
-                case 2 -> un();
-                case 3 -> tots();
-                case 4 -> modificar();
-                case 5 -> eliminar();
+            int opcio = Validacions.llegirOpcio(sc, "Opció: ", 0, 5);
+            switch (opcio) {
+                case 1 -> crearSector();
+                case 2 -> modificarSector();
+                case 3 -> veureSector();
+                case 4 -> controller.tots().forEach(s ->
+                        System.out.printf("  [%3d] %-20s  Escola: %d  Popularitat: %s%n",
+                                s.getIdSector(), s.getNom(), s.getIdEscola(), s.getPopularitat()));
+                case 5 -> eliminarSector();
+                case 0 -> sortir = true;
             }
-
-        } while (op != 0);
+        }
     }
 
-    private void crear() {
+    private void crearSector() {
+        String nom = excepcions.Validacions.llegirTextNoBuit(sc, "Nom: ");
+        double lat = excepcions.Validacions.llegirDouble(sc, "Latitud: ");
+        double lon = excepcions.Validacions.llegirDouble(sc, "Longitud: ");
+        String aprox = excepcions.Validacions.llegirTextNoBuit(sc, "Aproximació: ");
+        System.out.println("Popularitat: 1.Baixa  2.Mitjana  3.Alta");
+        int popOpc = excepcions.Validacions.llegirOpcio(sc, "Opció: ", 1, 3);
+        String pop = switch (popOpc) { case 1 -> "Baixa"; case 3 -> "Alta"; default -> "Mitjana"; };
+        String restr = excepcions.Validacions.llegirTextOpcional(sc, "Restriccions (opcional): ");
+        if (restr.isEmpty()) restr = "Cap";
+        int idEscola = excepcions.Validacions.llegirEnterNoNegatiu(sc, "ID Escola: ");
 
-        String nom = Validacions.llegirTextNoBuit(sc, "Nom: ");
-        double lat = Validacions.llegirDouble(sc, "Latitud: ");
-        double lon = Validacions.llegirDouble(sc, "Longitud: ");
-        String aprox = Validacions.llegirTextNoBuit(sc, "Aproximació: ");
-        String rest = Validacions.llegirTextNoBuit(sc, "Restriccions: ");
-        int idEscola = Validacions.llegirEnterNoNegatiu(sc, "ID escola: ");
-
-        String pop;
-        while (true) {
-            pop = Validacions.llegirTextNoBuit(sc, "Popularitat: ");
-            if (Popularitat.fromValor(pop) != null) break;
-            System.out.println("No vàlida");
+        Sector s = new Sector(0, nom, lat, lon, aprox, pop, restr, idEscola);
+        if (controller.crearSector(s)) {
+            System.out.println("Sector creat correctament.");
+        } else {
+            System.out.println("Ja existeix un sector amb aquest nom en aquesta escola.");
         }
-
-        Sector s = new Sector(0, nom, lat, lon, aprox, pop, rest, idEscola);
-
-        if (!controller.crearSector(s)) {
-            System.out.println("Ja existeix un sector amb aquest nom a l’escola.");
-            return;
-        }
-
-        System.out.println("Sector creat");
     }
 
-    private void un() {
-
-        Sector s = controller.buscar(
-                Validacions.llegirEnterNoNegatiu(sc, "ID: ")
-        );
-
-        if (s == null) {
-            System.out.println("No trobat");
-            return;
-        }
-
-        System.out.println("ID: " + s.getIdSector());
-        System.out.println("Nom: " + s.getNom());
-        System.out.println("Lat: " + s.getLatitud());
-        System.out.println("Lon: " + s.getLongitud());
-        System.out.println("Aprox: " + s.getAproximacio());
-        System.out.println("Pop: " + s.getPopularitat());
-        System.out.println("Restriccions: " + s.getRestriccions());
-        System.out.println("Escola: " + s.getIdEscola());
-        System.out.println("Vies: " + s.getNumeroVies());
-    }
-
-    private void tots() {
-
-        List<Sector> list = controller.tots();
-
-        if (list.isEmpty()) {
-            System.out.println("No hi ha sectors");
-            return;
-        }
-
-        list.forEach(s ->
-                System.out.println(s.getIdSector() + " - " + s.getNom() +
-                        " | escola=" + s.getIdEscola() +
-                        " | " + s.getPopularitat())
-        );
-    }
-
-    private void modificar() {
-
-        int id = Validacions.llegirEnterNoNegatiu(sc, "ID: ");
+    private void modificarSector() {
+        int id = excepcions.Validacions.llegirEnterNoNegatiu(sc, "ID Sector: ");
         Sector s = controller.buscar(id);
+        if (s == null) { System.out.println("Sector no trobat."); return; }
 
-        if (s == null) {
-            System.out.println("No trobat");
-            return;
-        }
-
-        String nom = Validacions.llegirTextOpcional(sc, "Nom (" + s.getNom() + "): ");
-        String lat = Validacions.llegirTextOpcional(sc, "Lat (" + s.getLatitud() + "): ");
-        String lon = Validacions.llegirTextOpcional(sc, "Lon (" + s.getLongitud() + "): ");
-        String aprox = Validacions.llegirTextOpcional(sc, "Aprox (" + s.getAproximacio() + "): ");
-        String pop = Validacions.llegirTextOpcional(sc, "Pop (" + s.getPopularitat() + "): ");
-        String rest = Validacions.llegirTextOpcional(sc, "Rest (" + s.getRestriccions() + "): ");
-
-        if (!nom.isEmpty()) {
-            if (!controller.modificar(s, nom)) {
-                System.out.println("Nom duplicat dins l’escola");
-                return;
-            }
-        }
-
-        if (!lat.isEmpty()) s.setLatitud(parseDouble(lat, s.getLatitud()));
-        if (!lon.isEmpty()) s.setLongitud(parseDouble(lon, s.getLongitud()));
+        System.out.println("Sector: " + s.getNom() + " | Escola: " + s.getIdEscola());
+        String nom = excepcions.Validacions.llegirTextOpcional(sc, "Nou nom (" + s.getNom() + "): ");
+        String aprox = excepcions.Validacions.llegirTextOpcional(sc, "Aproximació (" + s.getAproximacio() + "): ");
+        String restr = excepcions.Validacions.llegirTextOpcional(sc, "Restriccions (" + s.getRestriccions() + "): ");
         if (!aprox.isEmpty()) s.setAproximacio(aprox);
-        if (!pop.isEmpty()) s.setPopularitat(controller.normalitzarPopularitat(pop));
-        if (!rest.isEmpty()) s.setRestriccions(rest);
+        if (!restr.isEmpty()) s.setRestriccions(restr);
 
-        controller.modificar(s, s.getNom());
-
-        System.out.println("Modificat");
-    }
-
-    private void eliminar() {
-
-        controller.eliminar(
-                Validacions.llegirEnterNoNegatiu(sc, "ID: ")
-        );
-
-        System.out.println("Eliminat");
-    }
-
-    private double parseDouble(String valor, double def) {
-        try {
-            return Double.parseDouble(valor.trim());
-        } catch (Exception e) {
-            return def;
+        if (controller.modificar(s, nom.isEmpty() ? null : nom)) {
+            System.out.println("Sector modificat.");
+        } else {
+            System.out.println("Ja existeix un sector amb aquest nom en aquesta escola.");
         }
+    }
+
+    private void veureSector() {
+        int id = excepcions.Validacions.llegirEnterNoNegatiu(sc, "ID Sector: ");
+        Sector s = controller.buscar(id);
+        if (s == null) { System.out.println("Sector no trobat."); return; }
+        System.out.println("\n--- Sector #" + s.getIdSector() + " ---");
+        System.out.println("Nom:          " + s.getNom());
+        System.out.println("Coordenades:  " + s.getLatitud() + ", " + s.getLongitud());
+        System.out.println("Aproximació:  " + s.getAproximacio());
+        System.out.println("Popularitat:  " + s.getPopularitat());
+        System.out.println("Restriccions: " + s.getRestriccions());
+        System.out.println("Escola ID:    " + s.getIdEscola());
+    }
+
+    private void eliminarSector() {
+        int id = excepcions.Validacions.llegirEnterNoNegatiu(sc, "ID Sector a eliminar: ");
+        Sector s = controller.buscar(id);
+        if (s == null) { System.out.println("Sector no trobat."); return; }
+        System.out.print("Segur? Eliminarà el sector i totes les seves vies. (s/n): ");
+        if (!sc.nextLine().trim().equalsIgnoreCase("s")) { System.out.println("Cancel·lat."); return; }
+        controller.eliminar(id);
+        System.out.println("Sector eliminat.");
     }
 }
