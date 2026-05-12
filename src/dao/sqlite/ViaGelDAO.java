@@ -1,5 +1,6 @@
 package dao.sqlite;
 
+import dao.ConnectionDB;
 import dao.dao;
 import model.ViaGel;
 
@@ -7,156 +8,110 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Jo gestiono la persistència de ViaGel.
- *
- */
 public class ViaGelDAO implements dao<ViaGel, Integer> {
 
-    private Connection connection;
+    public ViaGelDAO() {}
 
-    public void setConnection(Connection connection) {
-        this.connection = connection;
-    }
-
-    /**
-     * Insereixo una via de gel.
-     * Només guardo id_via perquè la resta es calcula.
-     */
     @Override
     public void insert(ViaGel v) {
-
         String sql = "INSERT INTO vies_gel (id_via) VALUES (?)";
-
-        if (connection == null) {
-            System.err.println("No hi ha connexió per inserir una via de gel.");
-            return;
-        }
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-
+        try (Connection conn = ConnectionDB.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, v.getIdVia());
-
             stmt.executeUpdate();
-
         } catch (SQLException e) {
             System.err.println("Error inserint via de gel: " + e.getMessage());
         }
     }
 
-    /**
-     * Busco una ViaGel per id de Via.
-     */
     @Override
     public ViaGel findById(Integer id) {
-
-        String sql = "SELECT * FROM vies_gel WHERE id_via = ?";
-
-        if (connection == null) {
-            System.err.println("No hi ha connexió per cercar una via de gel.");
-            return null;
-        }
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-
+        String sql = """
+            SELECT vg.*, v.*
+            FROM vies_gel vg
+            JOIN vies v ON vg.id_via = v.id_via
+            WHERE vg.id_via = ?
+        """;
+        try (Connection conn = ConnectionDB.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
-
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                return new ViaGel(
-                        rs.getInt("id_via"),
-                        null, null, null,
-                        null, null,
-                        null, null, null,
-                        0, 0, 0,
-                        null
-                );
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    ViaGel vg = new ViaGel(
+                            rs.getInt("id_via"),
+                            rs.getString("nom"),
+                            rs.getString("grau"),
+                            rs.getString("orientacio"),
+                            rs.getString("estat"),
+                            rs.getString("data_estat"),
+                            rs.getString("tipus"),
+                            rs.getString("ancoratges"),
+                            rs.getString("tipus_roca"),
+                            rs.getInt("id_creador"),
+                            rs.getInt("id_sector"),
+                            rs.getInt("id_escola"),
+                            rs.getString("restriccions")
+                    );
+                    TramDAO tramDAO = new TramDAO();
+                    vg.establirTrams(tramDAO.findByVia(id));
+                    return vg;
+                }
             }
-
         } catch (SQLException e) {
             System.err.println("Error cercant via de gel: " + e.getMessage());
         }
-
         return null;
     }
 
-    /**
-     * Llisto totes les vies de gel.
-     */
     @Override
     public List<ViaGel> findAll() {
-
         List<ViaGel> llista = new ArrayList<>();
-        String sql = "SELECT * FROM vies_gel";
-
-        if (connection == null) {
-            System.err.println("No hi ha connexió per llistar les vies de gel.");
-            return llista;
-        }
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql);
+        String sql = """
+            SELECT vg.*, v.*
+            FROM vies_gel vg
+            JOIN vies v ON vg.id_via = v.id_via
+        """;
+        try (Connection conn = ConnectionDB.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
-
             while (rs.next()) {
-
-                llista.add(new ViaGel(
+                ViaGel vg = new ViaGel(
                         rs.getInt("id_via"),
-                        null, null, null,
-                        null, null,
-                        null, null, null,
-                        0, 0, 0,
-                        null
-                ));
+                        rs.getString("nom"),
+                        rs.getString("grau"),
+                        rs.getString("orientacio"),
+                        rs.getString("estat"),
+                        rs.getString("data_estat"),
+                        rs.getString("tipus"),
+                        rs.getString("ancoratges"),
+                        rs.getString("tipus_roca"),
+                        rs.getInt("id_creador"),
+                        rs.getInt("id_sector"),
+                        rs.getInt("id_escola"),
+                        rs.getString("restriccions")
+                );
+                TramDAO tramDAO = new TramDAO();
+                vg.establirTrams(tramDAO.findByVia(rs.getInt("id_via")));
+                llista.add(vg);
             }
-
         } catch (SQLException e) {
             System.err.println("Error llistant vies de gel: " + e.getMessage());
         }
-
         return llista;
     }
 
     @Override
     public void update(ViaGel v) {
-
-        String sql = "UPDATE vies_gel SET id_via = ? WHERE id_via = ?";
-
-        if (connection == null) {
-            System.err.println("No hi ha connexió per actualitzar una via de gel.");
-            return;
-        }
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-
-            stmt.setInt(1, v.getIdVia());
-            stmt.setInt(2, v.getIdVia());
-
-            stmt.executeUpdate();
-
-        } catch (SQLException e) {
-            System.err.println("Error actualitzant via de gel: " + e.getMessage());
-        }
+        // vies_gel no té columnes pròpies, l'actualització és a la taula vies (via ViaDAO)
     }
 
-    /**
-     * Elimino relació Via-Gel.
-     */
     @Override
     public void delete(Integer id) {
-
         String sql = "DELETE FROM vies_gel WHERE id_via = ?";
-
-        if (connection == null) {
-            System.err.println("No hi ha connexió per eliminar una via de gel.");
-            return;
-        }
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-
+        try (Connection conn = ConnectionDB.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
             stmt.executeUpdate();
-
         } catch (SQLException e) {
             System.err.println("Error eliminant via de gel: " + e.getMessage());
         }

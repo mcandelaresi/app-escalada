@@ -2,370 +2,221 @@ package dao.sqlite;
 
 import dao.ConnectionDB;
 import dao.dao;
-import model.Via;
-import helpers.AuxVia;
+import model.*;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-/**
- * DAO de l'entitat Via.
- * Gestiona totes les operacions CRUD contra la base de dades SQLite.
- */
 public class ViaDAO implements dao<Via, Integer> {
 
-    private static final Logger LOGGER = Logger.getLogger(ViaDAO.class.getName());
+    public ViaDAO() {}
 
-    /**
-     * Inserta una nova via a la base de dades.
-     */
     @Override
-    public void insert(Via via) {
-
-        // VALIDACIÓ D'ANCORATGES SEGONS EL TIPUS DE VIA
-        String ancoratge = via.getAncoratges();
-        String tipusVia = via.getTipus();
-
-        if (!AuxVia.anclajeValida(ancoratge, tipusVia)) {
-            LOGGER.severe("Ancoratges no vàlids per al tipus de via: " + tipusVia);
-            return;
-        }
-
-        String sql = "INSERT INTO vies (nom, grau, orientacio, estat, data_estat, tipus, ancoratges, tipus_roca, id_creador, id_sector, id_escola, restriccions) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-        try (Connection conn = ConnectionDB.getConnection()) {
-
-            if (conn == null) {
-                LOGGER.severe("No s'ha pogut obtenir la connexió per inserir una via.");
-                return;
+    public void insert(Via v) {
+        String sql = "INSERT INTO vies (nom, grau, orientacio, estat, data_estat, tipus, ancoratges, tipus_roca, id_creador, id_sector, id_escola, restriccions) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
+        try (Connection conn = ConnectionDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, v.getNom());
+            ps.setString(2, v.getGrau());
+            ps.setString(3, v.getOrientacio());
+            ps.setString(4, v.getEstat());
+            if (v.getDataEstat() != null) ps.setString(5, v.getDataEstat());
+            else ps.setNull(5, Types.VARCHAR);
+            ps.setString(6, v.getTipus());
+            ps.setString(7, v.getAncoratges());
+            ps.setString(8, v.getTipusDeRoca());
+            if (v.getIdCreador() > 0) ps.setInt(9, v.getIdCreador());
+            else ps.setNull(9, Types.INTEGER);
+            ps.setInt(10, v.getIdSector());
+            ps.setInt(11, v.getIdEscola());
+            ps.setString(12, v.getRestriccions());
+            ps.executeUpdate();
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) v.setIdVia(rs.getInt(1));
             }
-
-            try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-
-                ps.setString(1, via.getNom());
-                ps.setString(2, via.getGrau());
-                ps.setString(3, via.getOrientacio());
-                ps.setString(4, via.getEstat());
-                ps.setString(5, via.getDataEstat());
-                ps.setString(6, via.getTipus());
-                ps.setString(7, via.getAncoratges());
-                ps.setString(8, via.getTipusDeRoca());
-                ps.setInt(9, via.getIdCreador());
-                ps.setInt(10, via.getIdSector());
-                ps.setInt(11, via.getIdEscola());
-                ps.setString(12, via.getRestriccions());
-
-                ps.executeUpdate();
-
-                // Recuperar ID autogenerat
-                try (ResultSet rs = ps.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        via.setIdVia(rs.getInt(1));
-                    }
-                }
-            }
-
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error inserint la via", e);
+            System.err.println("Error inserint via: " + e.getMessage());
         }
     }
 
-    /**
-     * Retorna una via pel seu ID.
-     */
     @Override
     public Via findById(Integer id) {
-
         String sql = "SELECT * FROM vies WHERE id_via = ?";
-
-        try (Connection conn = ConnectionDB.getConnection()) {
-            if (conn == null) {
-                LOGGER.severe("No s'ha pogut obtenir la connexió per cercar una via per ID.");
-                return null;
+        try (Connection conn = ConnectionDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapAmbSubtipus(rs, conn);
             }
-
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-
-                ps.setInt(1, id);
-                ResultSet rs = ps.executeQuery();
-
-                if (rs.next()) {
-                    return mapResultSetToVia(rs);
-                }
-            }
-
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error cercant la via per ID", e);
+            System.err.println("Error cercant via: " + e.getMessage());
         }
-
         return null;
-    }
-
-    /**
-     * Retorna totes les vies.
-     */
-    @Override
-    public List<Via> findAll() {
-
-        List<Via> llista = new ArrayList<>();
-        String sql = "SELECT * FROM vies";
-
-        try (Connection conn = ConnectionDB.getConnection()) {
-            if (conn == null) {
-                LOGGER.severe("No s'ha pogut obtenir la connexió per llistar les vies.");
-                return llista;
-            }
-
-            try (Statement st = conn.createStatement();
-                 ResultSet rs = st.executeQuery(sql)) {
-
-                while (rs.next()) {
-                    llista.add(mapResultSetToVia(rs));
-                }
-            }
-
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error llistant les vies", e);
-        }
-
-        return llista;
     }
 
     public Via findByNomAndEscola(String nom, int idEscola) {
-
-        String sql = "SELECT * FROM vies WHERE LOWER(nom) = LOWER(?) AND id_escola = ?";
-
-        try (Connection conn = ConnectionDB.getConnection()) {
-            if (conn == null) {
-                LOGGER.severe("No s'ha pogut obtenir la connexió per cercar una via per nom i escola.");
-                return null;
+        String sql = "SELECT * FROM vies WHERE nom = ? AND id_escola = ?";
+        try (Connection conn = ConnectionDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, nom);
+            ps.setInt(2, idEscola);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapAmbSubtipus(rs, conn);
             }
-
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-
-                ps.setString(1, nom);
-                ps.setInt(2, idEscola);
-
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) {
-                        return mapResultSetToVia(rs);
-                    }
-                }
-            }
-
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error cercant la via per nom i escola", e);
+            System.err.println("Error cercant via per nom i escola: " + e.getMessage());
         }
-
         return null;
     }
 
-    /**
-     * Actualitza una via existent.
-     */
     @Override
-    public void update(Via via) {
-
-        String sql = "UPDATE vies SET nom=?, grau=?, orientacio=?, estat=?, data_estat=?, tipus=?, ancoratges=?, tipus_roca=?, id_creador=?, id_sector=?, id_escola=?, restriccions=? WHERE id_via=?";
-
-        try (Connection conn = ConnectionDB.getConnection()) {
-            if (conn == null) {
-                LOGGER.severe("No s'ha pogut obtenir la connexió per actualitzar una via.");
-                return;
+    public List<Via> findAll() {
+        List<Via> llista = new ArrayList<>();
+        String sql = "SELECT * FROM vies ORDER BY nom";
+        try (Connection conn = ConnectionDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                Via v = mapAmbSubtipus(rs, conn);
+                if (v != null) llista.add(v);
             }
-
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-
-                ps.setString(1, via.getNom());
-                ps.setString(2, via.getGrau());
-                ps.setString(3, via.getOrientacio());
-                ps.setString(4, via.getEstat());
-                ps.setString(5, via.getDataEstat());
-                ps.setString(6, via.getTipus());
-                ps.setString(7, via.getAncoratges());
-                ps.setString(8, via.getTipusDeRoca());
-                ps.setInt(9, via.getIdCreador());
-                ps.setInt(10, via.getIdSector());
-                ps.setInt(11, via.getIdEscola());
-                ps.setString(12, via.getRestriccions());
-                ps.setInt(13, via.getIdVia());
-
-                ps.executeUpdate();
-            }
-
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error actualitzant la via", e);
+            System.err.println("Error llistant vies: " + e.getMessage());
+        }
+        return llista;
+    }
+
+    @Override
+    public void update(Via v) {
+        String sql = "UPDATE vies SET nom=?, grau=?, orientacio=?, estat=?, data_estat=?, tipus=?, ancoratges=?, tipus_roca=?, id_creador=?, id_sector=?, id_escola=?, restriccions=? WHERE id_via=?";
+        try (Connection conn = ConnectionDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, v.getNom());
+            ps.setString(2, v.getGrau());
+            ps.setString(3, v.getOrientacio());
+            ps.setString(4, v.getEstat());
+            if (v.getDataEstat() != null) ps.setString(5, v.getDataEstat());
+            else ps.setNull(5, Types.VARCHAR);
+            ps.setString(6, v.getTipus());
+            ps.setString(7, v.getAncoratges());
+            ps.setString(8, v.getTipusDeRoca());
+            if (v.getIdCreador() > 0) ps.setInt(9, v.getIdCreador());
+            else ps.setNull(9, Types.INTEGER);
+            ps.setInt(10, v.getIdSector());
+            ps.setInt(11, v.getIdEscola());
+            ps.setString(12, v.getRestriccions());
+            ps.setInt(13, v.getIdVia());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Error actualitzant via: " + e.getMessage());
         }
     }
 
-    /**
-     * Elimina una via pel seu ID.
-     */
     @Override
     public void delete(Integer id) {
-
-        String sql = "DELETE FROM vies WHERE id_via=?";
-
-        try (Connection conn = ConnectionDB.getConnection()) {
-            if (conn == null) {
-                LOGGER.severe("No s'ha pogut obtenir la connexió per eliminar una via.");
-                return;
-            }
-
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-
-                ps.setInt(1, id);
-                ps.executeUpdate();
-            }
-
+        String sql = "DELETE FROM vies WHERE id_via = ?";
+        try (Connection conn = ConnectionDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            ps.executeUpdate();
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error eliminant la via", e);
+            System.err.println("Error eliminant via: " + e.getMessage());
         }
     }
-    // Metode per cercar una via pel seu nom
-    public Via findByNom(String nom) {
 
-        String sql = "SELECT * FROM vies WHERE LOWER(nom) = LOWER(?)";
+    // =====================================================================
+    // Mapeig: crea el subtipus correcte (ViaEsportiva / ViaClassica / ViaGel)
+    // IMPORTANT: Via és abstracta, mai s'instancia directament
+    // =====================================================================
+    private Via mapAmbSubtipus(ResultSet rs, Connection conn) throws SQLException {
+        int id = rs.getInt("id_via");
+        String nom = rs.getString("nom");
+        String grau = rs.getString("grau");
+        String orientacio = rs.getString("orientacio");
+        String estat = rs.getString("estat");
+        String dataEstat = rs.getString("data_estat");
+        String tipus = rs.getString("tipus");
+        String ancoratges = rs.getString("ancoratges");
+        String tipusRoca = rs.getString("tipus_roca");
+        int idCreador = rs.getInt("id_creador");
+        if (rs.wasNull()) idCreador = 0;
+        int idSector = rs.getInt("id_sector");
+        int idEscola = rs.getInt("id_escola");
+        String restriccions = rs.getString("restriccions");
 
-        try (Connection conn = ConnectionDB.getConnection()) {
-            if (conn == null) {
-                LOGGER.severe("No s'ha pogut obtenir la connexió per cercar una via per nom.");
-                return null;
+        // IMPORTANT: "Clàssica" (amb accent) és el valor guardat a la BD
+        return switch (tipus != null ? tipus : "") {
+            case "Esportiva" -> {
+                int llargada = getLlargadaEsportiva(conn, id);
+                if (llargada < 5)  llargada = 5;
+                if (llargada > 30) llargada = 30;
+                yield new ViaEsportiva(id, nom, grau, orientacio, estat, dataEstat, tipus,
+                        ancoratges, tipusRoca, idCreador, idSector, idEscola, restriccions, llargada);
             }
+            case "Clàssica", "Classica" -> {
+                String ancoratgesPermesos = getAncoratgesPermesosClassica(conn, id);
+                ViaClassica vc = new ViaClassica(id, nom, grau, orientacio, estat, dataEstat, tipus,
+                        ancoratges, tipusRoca, idCreador, idSector, idEscola, restriccions, ancoratgesPermesos);
+                vc.establirTrams(getTrams(conn, id));
+                yield vc;
+            }
+            case "Gel" -> {
+                ViaGel vg = new ViaGel(id, nom, grau, orientacio, estat, dataEstat, tipus,
+                        ancoratges, tipusRoca, idCreador, idSector, idEscola, restriccions);
+                vg.establirTrams(getTrams(conn, id));
+                yield vg;
+            }
+            default -> {
+                System.err.println("Tipus de via desconegut: '" + tipus + "' (id=" + id + ")");
+                yield new ViaEsportiva(id, nom, grau, orientacio, estat, dataEstat, tipus,
+                        ancoratges, tipusRoca, idCreador, idSector, idEscola, restriccions, 5);
+            }
+        };
+    }
 
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+    private int getLlargadaEsportiva(Connection conn, int idVia) throws SQLException {
+        String sql = "SELECT llargada FROM vies_esportiva WHERE id_via = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, idVia);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt("llargada");
+            }
+        }
+        return 10;
+    }
 
-                ps.setString(1, nom);
+    private String getAncoratgesPermesosClassica(Connection conn, int idVia) throws SQLException {
+        String sql = "SELECT ancoratges_permesos FROM vies_classica WHERE id_via = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, idVia);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getString("ancoratges_permesos");
+            }
+        }
+        return "";
+    }
 
-                try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) {
-                        return mapResultSetToVia(rs);
-                    }
+    private List<model.Tram> getTrams(Connection conn, int idVia) throws SQLException {
+        List<model.Tram> trams = new ArrayList<>();
+        String sql = "SELECT * FROM trams WHERE id_via = ? ORDER BY num_llarg";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, idVia);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int llarg = rs.getInt("llarg");
+                    if (llarg < 15) llarg = 15;
+                    if (llarg > 30) llarg = 30;
+                    trams.add(new model.Tram(
+                            rs.getInt("id_tram"),
+                            rs.getInt("num_llarg"),
+                            llarg,
+                            rs.getString("grau_dificultat"),
+                            idVia
+                    ));
                 }
             }
-
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error cercant la via per nom", e);
         }
-
-        return null;
-    }
-
-    //metode per cercar una via pel seu tipus
-    public List<Via> findByTipus(String tipus) {
-
-        List<Via> lista = new ArrayList<>();
-
-        String sql = "SELECT * FROM vies WHERE tipus=?";
-
-        try (Connection conn = ConnectionDB.getConnection()) {
-
-            if (conn == null) {
-                LOGGER.severe("No s'ha pogut obtenir connexió");
-                return lista;
-            }
-
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-
-                ps.setString(1, tipus);
-
-                try (ResultSet rs = ps.executeQuery()) {
-
-                    while (rs.next()) {
-                        lista.add(mapResultSetToVia(rs));
-                    }
-                }
-            }
-
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error cercant vies per tipus", e);
-        }
-
-        return lista;
-    }
-
-    //   Busca totes les vies d'un sector.
-    public List<Via> findBySector(int idSector) {
-
-        List<Via> llista = new ArrayList<>();
-        String sql = "SELECT * FROM vies WHERE id_sector = ?";
-
-        try (Connection conn = ConnectionDB.getConnection()) {
-            if (conn == null) {
-                LOGGER.severe("No s'ha pogut obtenir la connexió per cercar vies per sector.");
-                return llista;
-            }
-
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-
-                ps.setInt(1, idSector);
-
-                try (ResultSet rs = ps.executeQuery()) {
-                    while (rs.next()) {
-                        llista.add(mapResultSetToVia(rs));
-                    }
-                }
-            }
-
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error cercant vies per sector", e);
-        }
-
-        return llista;
-    }
-
-    // Busca totes les vies d'una escola.
-    public List<Via> findByEscola(int idEscola) {
-
-        List<Via> llista = new ArrayList<>();
-        String sql = "SELECT * FROM vies WHERE id_escola = ?";
-
-        try (Connection conn = ConnectionDB.getConnection()) {
-            if (conn == null) {
-                LOGGER.severe("No s'ha pogut obtenir la connexió per cercar vies per escola.");
-                return llista;
-            }
-
-            try (PreparedStatement ps = conn.prepareStatement(sql)) {
-
-                ps.setInt(1, idEscola);
-
-                try (ResultSet rs = ps.executeQuery()) {
-                    while (rs.next()) {
-                        llista.add(mapResultSetToVia(rs));
-                    }
-                }
-            }
-
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error cercant vies per escola", e);
-        }
-
-        return llista;
-    }
-
-    /**
-     * Mètode privat que transforma un ResultSet en un objecte Via.
-     */
-    private Via mapResultSetToVia(ResultSet rs) throws SQLException {
-
-        return new Via(
-                rs.getInt("id_via"),
-                rs.getString("nom"),
-                rs.getString("grau"),
-                rs.getString("orientacio"),
-                rs.getString("estat"),
-                rs.getString("data_estat"),
-                rs.getString("tipus"),
-                rs.getString("ancoratges"),
-                rs.getString("tipus_roca"),
-                rs.getInt("id_creador"),
-                rs.getInt("id_sector"),
-                rs.getInt("id_escola"),
-                rs.getString("restriccions")
-        ) {};
+        return trams;
     }
 }

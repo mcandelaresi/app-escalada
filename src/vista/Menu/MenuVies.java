@@ -2,10 +2,7 @@ package vista.Menu;
 
 import controlador.ViaController;
 import excepcions.Validacions;
-import model.Via;
-import vista.Vista;
 
-import java.util.List;
 import java.util.Scanner;
 
 public class MenuVies {
@@ -18,84 +15,29 @@ public class MenuVies {
         this.controller = controller;
     }
 
-    public void actualitzarEstatsCaducats() {
-        controller.actualitzarEstatsCaducats();
-    }
-
     public void menu() {
+        boolean sortir = false;
+        while (!sortir) {
+            System.out.println("\n╔══════════════════════════════╗");
+            System.out.println("║       GESTIÓ DE VIES         ║");
+            System.out.println("╠══════════════════════════════╣");
+            System.out.println("║  1. Crear via                ║");
+            System.out.println("║  2. Modificar via            ║");
+            System.out.println("║  3. Veure via (per ID)       ║");
+            System.out.println("║  4. Llistar totes les vies   ║");
+            System.out.println("║  5. Eliminar via             ║");
+            System.out.println("║  0. Tornar                   ║");
+            System.out.println("╚══════════════════════════════╝");
 
-        int op;
-
-        do {
-            Vista.menuVies();
-            op = Validacions.llegirOpcio(sc, "Opcio: ", 0, 5);
-
-            switch (op) {
-                case 1 -> crear();
-                case 2 -> llistarUna();
-                case 3 -> llistarTotes();
-                case 4 -> modificar();
-                case 5 -> eliminar();
+            int opcio = Validacions.llegirOpcio(sc, "Opció: ", 0, 5);
+            switch (opcio) {
+                case 1 -> controller.crearVia(sc);
+                case 2 -> controller.modificarVia(sc);
+                case 3 -> controller.llistarUna(sc);
+                case 4 -> controller.llistarTotes();
+                case 5 -> controller.eliminarVia(sc);
+                case 0 -> sortir = true;
             }
-
-        } while (op != 0);
-    }
-
-    private void crear() {
-        controller.crearVia(sc);
-    }
-
-    private void llistarUna() {
-
-        Via v = controller.buscar(
-                Validacions.llegirEnterNoNegatiu(sc, "ID: ")
-        );
-
-        if (v == null) {
-            System.out.println("No trobada");
-            return;
         }
-
-        mostrar(v);
-    }
-
-    private void llistarTotes() {
-
-        List<Via> list = controller.totes();
-
-        if (list.isEmpty()) {
-            System.out.println("Sense vies");
-            return;
-        }
-
-        list.forEach(this::mostrar);
-    }
-
-    private void modificar() {
-        controller.modificarVia(sc);
-    }
-
-    private void eliminar() {
-
-        Via v = controller.buscar(
-                Validacions.llegirEnterNoNegatiu(sc, "ID: ")
-        );
-
-        if (v == null) {
-            System.out.println("No trobada");
-            return;
-        }
-
-        controller.eliminar(v);
-        System.out.println("Eliminada");
-    }
-
-    private void mostrar(Via v) {
-        System.out.println(
-                v.getIdVia() + " - " + v.getNom() +
-                        " | " + v.getTipus() +
-                        " | " + v.getGrau() +
-                        " | " + v.getEstat()
-        );
     }
 }
