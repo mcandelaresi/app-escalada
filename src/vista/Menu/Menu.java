@@ -63,16 +63,16 @@ public class Menu {
 
             viaController.actualitzarEstatsCaducats();
 
-            System.out.println("\n╔══════════════════════════════════════╗");
-            System.out.println("║     GESTIÓ D'ESCALADA - PILLAM LTD  ║");
-            System.out.println("╠══════════════════════════════════════╣");
-            System.out.println("║  1. Gestió de Vies                  ║");
-            System.out.println("║  2. Gestió d'Escoles                ║");
-            System.out.println("║  3. Gestió de Sectors               ║");
-            System.out.println("║  4. Gestió d'Escaladors             ║");
-            System.out.println("║  5. Cerques                         ║");
-            System.out.println("║  0. Sortir                          ║");
-            System.out.println("╚══════════════════════════════════════╝");
+            System.out.println("╔════════════════════════════════════════╗");
+            System.out.println("║     GESTIÓ D'ESCALADA - PILLAM LTD     ║");
+            System.out.println("╠════════════════════════════════════════╣");
+            System.out.println("║  1. Gestió de Vies                     ║");
+            System.out.println("║  2. Gestió d'Escoles                   ║");
+            System.out.println("║  3. Gestió de Sectors                  ║");
+            System.out.println("║  4. Gestió d'Escaladors                ║");
+            System.out.println("║  5. Cerques                            ║");
+            System.out.println("║  0. Sortir                             ║");
+            System.out.println("╚════════════════════════════════════════╝");
 
             int opcio = Validacions.llegirOpcio(sc, "Opció: ", 0, 5);
 

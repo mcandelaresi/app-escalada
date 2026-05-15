@@ -18,7 +18,7 @@ public class MenuEscaladors {
     public void menu() {
         boolean sortir = false;
         while (!sortir) {
-            System.out.println("\n╔══════════════════════════════════╗");
+            System.out.println("╔══════════════════════════════════╗");
             System.out.println("║      GESTIÓ D'ESCALADORS         ║");
             System.out.println("╠══════════════════════════════════╣");
             System.out.println("║  1. Crear escalador              ║");
