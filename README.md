@@ -75,7 +75,9 @@ src/
     └── Validacions.java
 
 bdd/
-└── escalada.db                        # Base de dades SQLite (autogenerada)
+├── escalada.db                        # Base de dades SQLite 
+├── eer-escaladaMija.png               # Diagrama EER exportat
+└── eer-escaladaMija.dia               # Fitxer editable del diagrama EER
 
 lib/
 └── sqlite-jdbc-3.53.0.0.jar
