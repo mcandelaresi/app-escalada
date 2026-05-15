@@ -18,7 +18,7 @@ public class MenuEscola {
     public void menu() {
         boolean sortir = false;
         while (!sortir) {
-            System.out.println("\n╔══════════════════════════════╗");
+            System.out.println("╔══════════════════════════════╗");
             System.out.println("║      GESTIÓ D'ESCOLES        ║");
             System.out.println("╠══════════════════════════════╣");
             System.out.println("║  1. Crear escola             ║");

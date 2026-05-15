@@ -19,7 +19,7 @@ public class MenuSector {
     public void menu() {
         boolean sortir = false;
         while (!sortir) {
-            System.out.println("\n╔══════════════════════════════╗");
+            System.out.println("╔══════════════════════════════╗");
             System.out.println("║      GESTIÓ DE SECTORS       ║");
             System.out.println("╠══════════════════════════════╣");
             System.out.println("║  1. Crear sector             ║");

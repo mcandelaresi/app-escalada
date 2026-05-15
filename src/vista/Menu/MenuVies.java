@@ -18,7 +18,7 @@ public class MenuVies {
     public void menu() {
         boolean sortir = false;
         while (!sortir) {
-            System.out.println("\n╔══════════════════════════════╗");
+            System.out.println("╔══════════════════════════════╗");
             System.out.println("║       GESTIÓ DE VIES         ║");
             System.out.println("╠══════════════════════════════╣");
             System.out.println("║  1. Crear via                ║");

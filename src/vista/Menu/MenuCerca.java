@@ -18,18 +18,18 @@ public class MenuCerca {
     public void menu() {
         boolean sortir = false;
         while (!sortir) {
-            System.out.println("\n╔══════════════════════════════════════════════════════════╗");
+            System.out.println("╔══════════════════════════════════════════════════════════╗");
             System.out.println("║                       CERQUES                            ║");
             System.out.println("╠══════════════════════════════════════════════════════════╣");
-            System.out.println("║  1. Vies disponibles d'una escola                       ║");
-            System.out.println("║  2. Cercar vies per rang de dificultat                  ║");
-            System.out.println("║  3. Cercar vies per estat                               ║");
-            System.out.println("║  4. Escoles amb restriccions actives                    ║");
-            System.out.println("║  5. Sectors amb més de X vies disponibles               ║");
-            System.out.println("║  6. Escaladors amb el mateix nivell màxim               ║");
-            System.out.println("║  7. Vies que han tornat a Apte recentment               ║");
-            System.out.println("║  8. Vies més llargues d'una escola                      ║");
-            System.out.println("║  0. Tornar al menú principal                            ║");
+            System.out.println("║  1. Vies disponibles d'una escola                        ║");
+            System.out.println("║  2. Cercar vies per rang de dificultat                   ║");
+            System.out.println("║  3. Cercar vies per estat                                ║");
+            System.out.println("║  4. Escoles amb restriccions actives                     ║");
+            System.out.println("║  5. Sectors amb més de X vies disponibles                ║");
+            System.out.println("║  6. Escaladors amb el mateix nivell màxim                ║");
+            System.out.println("║  7. Vies que han tornat a Apte recentment                ║");
+            System.out.println("║  8. Vies més llargues d'una escola                       ║");
+            System.out.println("║  0. Tornar al menú principal                             ║");
             System.out.println("╚══════════════════════════════════════════════════════════╝");
 
             int opcio = Validacions.llegirOpcio(sc, "Opció: ", 0, 8);
